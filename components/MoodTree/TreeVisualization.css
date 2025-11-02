@@ -1,0 +1,169 @@
+.tree-scene {
+  position: relative;
+  max-width: 600px;
+  height: 500px;
+  margin: 0 auto;
+  background: linear-gradient(to bottom, transparent 70%, #8fbc8f 70%);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.tree-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70%;
+  pointer-events: none;
+}
+
+.tree-sun {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: #FFD700;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+  animation: sunPulse 4s infinite;
+}
+
+.tree-cloud {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.8);
+  animation: cloudFloat 20s infinite linear;
+}
+
+.cloud-1 {
+  top: 40px;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.cloud-2 {
+  top: 80px;
+  right: 15%;
+  animation-delay: -10s;
+}
+
+.tree-wrapper {
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 80%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.tree-visual {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: treeGrowIn 1s ease-out;
+}
+
+.tree-svg {
+  max-width: 300px;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.tree-stage-seed .tree-svg {
+  max-width: 100px;
+}
+
+.tree-stage-sprout .tree-svg {
+  max-width: 120px;
+}
+
+.tree-stage-sapling .tree-svg {
+  max-width: 180px;
+}
+
+.tree-stage-young .tree-svg {
+  max-width: 240px;
+}
+
+.tree-stage-mature .tree-svg {
+  max-width: 280px;
+}
+
+.tree-stage-blooming .tree-svg {
+  max-width: 300px;
+}
+
+.bloom-sparkle {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #FF69B4;
+  animation: sparkleAnim 2s infinite;
+}
+
+.messages-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.tree-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to bottom, #8fbc8f 0%, #6b8e6b 100%);
+}
+
+@keyframes treeGrowIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sunPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes cloudFloat {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100vw); }
+}
+
+@keyframes sparkleAnim {
+  0%, 100% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.2) rotate(180deg);
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 768px) {
+  .tree-scene {
+    height: 400px;
+  }
+  
+  .tree-svg {
+    max-width: 250px;
+  }
+}

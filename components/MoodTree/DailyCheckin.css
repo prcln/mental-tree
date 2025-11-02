@@ -1,0 +1,68 @@
+.daily-checkin-modal {
+  max-width: 500px;
+}
+
+.mood-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.mood-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.mood-btn:hover {
+  transform: scale(1.02);
+  border-color: #4CAF50;
+  background: #f0f9f0;
+}
+
+.mood-btn.selected {
+  background: #f0f9f0;
+  border-width: 3px;
+}
+
+.mood-emoji {
+  font-size: 24px;
+  min-width: 32px;
+}
+
+.mood-label {
+  flex: 1;
+  font-weight: 600;
+}
+
+.mood-points {
+  color: #4CAF50;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.mood-note {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+}
+
+.mood-note:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
