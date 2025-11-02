@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import './DailyCheckIn.css';
+import './DailyCheckin.css'
+//OMG
 
 const DailyCheckIn = ({ onSubmit, onClose }) => {
   const [selectedMood, setSelectedMood] = useState(null);
