@@ -1,46 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase/client';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from '../contexts/AuthContext/AuthContext';
+import ProtectedRoute from '../components/ProtectedRoute'
+import AuthForm from '../components/AuthComponent/AuthComponent';
 import TreePage from '../pages/TreePage/TreePage';
 import './App.css';
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkUser = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setCurrentUser(session?.user ?? null);
-    } catch (error) {
-      console.error('Error checking user:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="app-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="app">
-      <TreePage currentUser={currentUser} />
-    </div>
+    <AuthProvider>
+        <Routes>
+          {/* Login route */}
+          <Route path="/login" element={<AuthForm />} />
+          
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<TreePage />} />
+            <Route path="/tree" element={<TreePage />} />
+          </Route>
+
+          {/* Catch all - redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    </AuthProvider>
   );
 }
 

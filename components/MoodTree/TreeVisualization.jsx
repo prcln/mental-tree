@@ -3,6 +3,22 @@ import { Sun, Cloud, Sparkles } from 'lucide-react';
 import MessageDecoration from './MessageDecoration';
 import './TreeVisualization.css';
 
+import seed from "../../public/assets/trees/seed.svg";
+import sprout from "../../public/assets/trees/sprout.svg";
+import sapling from "../../public/assets/trees/sapling.svg";
+import young from "../../public/assets/trees/young.svg";
+import mature from "../../public/assets/trees/mature.svg";
+import blooming from "../../public/assets/trees/blooming.svg"
+
+const stageImages = {
+  seed,
+  sprout,
+  sapling,
+  young,
+  mature,
+  blooming,
+};
+
 const TreeVisualization = ({ stage, messages, moodScore }) => {
   const [currentStage, setCurrentStage] = useState('seed');
 
@@ -38,7 +54,7 @@ const TreeVisualization = ({ stage, messages, moodScore }) => {
       <div className="tree-wrapper">
         <div className={`tree-visual tree-stage-${currentStage}`}>
           <img 
-            src={`/assets/trees/${currentStage}.svg`}
+            src={stageImages[currentStage]}
             alt={`Tree at ${currentStage} stage`}
             className="tree-svg"
           />
