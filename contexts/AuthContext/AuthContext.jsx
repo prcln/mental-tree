@@ -14,23 +14,30 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
-    // Check active session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Only check session once on mount
+    if (!sessionChecked) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        console.log('Initial session:', session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        setSessionChecked(true);
+      });
+    }
 
-    // Listen for auth changes
+    // Listen for auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session?.user);
-      setUser(session?.user ?? null);
+      // Only update on actual auth changes, not on token refresh
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        setUser(session?.user ?? null);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [sessionChecked]);
 
   const signUp = async (email, password) => {
     const { data, error } = await supabase.auth.signUp({

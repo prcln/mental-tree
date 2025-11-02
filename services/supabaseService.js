@@ -14,6 +14,7 @@ class SupabaseService {
             mood_score: 0,
             message_count: 0,
             is_public: true,
+            completed_quiz: false,
             last_check_in: null,
             ...treeData
           }
@@ -78,6 +79,23 @@ class SupabaseService {
     }
   }
 
+  async markQuizCompleted(treeId) {
+    try {
+      const { data, error } = await supabase
+        .from('trees')
+        .update({ completed_quiz: true })
+        .eq('id', treeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error marking quiz as completed:', error);
+      throw error;
+    }
+  }
+
   // ==================== MOOD CHECK-IN OPERATIONS ====================
   
   async addMoodCheckIn(treeId, moodData) {
@@ -107,17 +125,19 @@ class SupabaseService {
 
       if (treeError) throw treeError;
 
-      const { error: updateError } = await supabase
+      const { data: updatedTree, error: updateError } = await supabase
         .from('trees')
         .update({
           mood_score: tree.mood_score + moodData.points,
           last_check_in: new Date().toISOString()
         })
-        .eq('id', treeId);
+        .eq('id', treeId)
+        .select()
+        .single();
 
       if (updateError) throw updateError;
 
-      return checkIn;
+      return { checkIn, tree: updatedTree };
     } catch (error) {
       console.error('Error adding mood check-in:', error);
       throw error;
@@ -171,17 +191,19 @@ class SupabaseService {
 
       if (treeError) throw treeError;
 
-      const { error: updateError } = await supabase
+      const { data: updatedTree, error: updateError } = await supabase
         .from('trees')
         .update({
           mood_score: tree.mood_score + 5,
           message_count: tree.message_count + 1
         })
-        .eq('id', treeId);
+        .eq('id', treeId)
+        .select()
+        .single();
 
       if (updateError) throw updateError;
 
-      return message;
+      return { message, tree: updatedTree };
     } catch (error) {
       console.error('Error adding message:', error);
       throw error;
