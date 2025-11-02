@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './DailyCheckin.css'
-//OMG
 
 const DailyCheckIn = ({ onSubmit, onClose }) => {
   const [selectedMood, setSelectedMood] = useState(null);
@@ -18,8 +17,8 @@ const DailyCheckIn = ({ onSubmit, onClose }) => {
 
     const moodData = moodOptions.find(m => m.id === selectedMood);
     onSubmit({
-      mood: selectedMood,
-      points: moodData.points,
+      mood: moodData.points, // Changed: Send points as the mood value (numeric)
+      moodType: selectedMood, // Optional: Keep the mood ID for reference
       note: note.trim(),
       timestamp: new Date()
     });

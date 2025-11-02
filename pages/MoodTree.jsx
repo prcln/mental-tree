@@ -1,12 +1,15 @@
 import React, { memo, useState, useEffect } from 'react';
-import { Droplets, MessageCircle, Star } from 'lucide-react';
+import { Droplets, MessageCircle, Star, Share2, RotateCcw } from 'lucide-react';
 import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
 import DailyCheckIn from '../components/MoodTree/DailyCheckin.jsx';
 import SendEncouragement from '../components/MoodTree/SendEncouragement.jsx';
+import TreeShare from '../components/MoodTree/TreeShare.jsx';
 import supabaseService from '../services/supabaseService';
+import RetakeQuizModal from '../components/Modal/QuizRetakeWarn/QuizRetakeWarning.jsx';
+
 import './MoodTree.css';
 
-// Constant for stage names, taken from Code 1
+// Constant for stage names
 const stageNames = {
   seed: 'Seed of Hope',
   sprout: 'New Beginning',
@@ -16,20 +19,24 @@ const stageNames = {
   blooming: 'Full Bloom'
 };
 
-const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate }) => {
+const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQuiz }) => {
   // --- State ---
   
-  // UI state for modals (from Code 1)
+  // UI state for modals
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showEncouragement, setShowEncouragement] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showRetakeModal, setShowRetakeModal] = useState(false);
 
-  const ONE_HOUR_MS = 60 * 60 * 1000;
-  const STORAGE_KEY = `mood-tree-check-in-${treeId}`;
-  const [canCheckIn, setCanCheckIn] = useState(true); 
+  // Check-in availability state (now from database)
+  const [canCheckIn, setCanCheckIn] = useState(true);
   const [timeLeftMessage, setTimeLeftMessage] = useState('');
 
-  // Data state for messages (managed internally, from Code 2)
-  const [messages, setMessages] =useState([]);
+  const [canResetTree, setCanResetTree] = useState(true);
+  const [timeLeftResetTree, setTimeLeftResetTree] = useState('');
+
+  // Data state for messages (managed internally)
+  const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
   
   // --- Data Loading ---
@@ -47,117 +54,143 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate }) => {
     }
   };
 
+  // Check if user can check in (from database)
+  const checkCanCheckIn = async () => {
+    if (!isOwner || !treeId) return;
+    
+    try {
+      const { canCheckIn: able, timeLeft } = await supabaseService.canCheckIn(treeId);
+      setCanCheckIn(able);
+      
+      if (!able && timeLeft > 0) {
+        const minutes = Math.floor(timeLeft / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        setTimeLeftMessage(`Wait ${minutes}m ${seconds}s`);
+      } else {
+        setTimeLeftMessage('');
+      }
+    } catch (err) {
+      console.error('Error checking check-in availability:', err);
+    }
+  };
+
+  const checkCanResetTree = async () => {
+  if (!isOwner || !treeId) return;
+  
+  try {
+    const { canResetTree: able, timeLeft } = await supabaseService.canResetTree(treeId);
+    setCanResetTree(able);
+    
+    if (!able && timeLeft > 0) {
+      const hours = Math.floor(timeLeft / (1000 * 60 * 60)); 
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)); 
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000); 
+      setTimeLeftResetTree(`Wait ${hours}h ${minutes}m ${seconds}s`);
+    } else {
+      setTimeLeftResetTree('');
+    }
+  } catch (err) {
+    console.error('Error checking check-in availability:', err);
+  }
+};
+
+
+  // Effect to check check-in availability periodically (database-based)
   useEffect(() => {
-    // This logic only needs to run for the tree's owner
     if (!isOwner) return;
 
-    // Function to check the time
-    const checkTimeout = () => {
-      const lastCheckInTime = localStorage.getItem(STORAGE_KEY);
+    checkCanCheckIn();
+    checkCanResetTree();
 
-      if (!lastCheckInTime) {
-        setCanCheckIn(true); // No record, so user can check in
-        return;
-      }
+    const intervalId1 = setInterval(checkCanCheckIn, 1000);
+    const intervalId2 = setInterval(checkCanResetTree, 1000);
 
-      const lastCheckInDate = new Date(parseInt(lastCheckInTime));
-      const now = new Date();
-      const timeDiff = now.getTime() - lastCheckInDate.getTime();
-
-      if (timeDiff >= ONE_HOUR_MS) {
-        // More than 1 hour has passed
-        setCanCheckIn(true);
-        setTimeLeftMessage('');
-        localStorage.removeItem(STORAGE_KEY); // Clean up old key
-      } else {
-        // Still within the 1-hour window
-        setCanCheckIn(false);
-        const remainingMs = ONE_HOUR_MS - timeDiff;
-        const minutes = Math.floor((remainingMs / 1000 / 60) % 60);
-        const seconds = Math.floor((remainingMs / 1000) % 60);
-        setTimeLeftMessage(`Wait ${minutes}m ${seconds}s`);
-      }
+    return () => {
+      clearInterval(intervalId1);
+      clearInterval(intervalId2);
     };
+  }, [isOwner, treeId]);
 
-    // Run the check immediately on load
-    checkTimeout();
-
-    // Set up an interval to update the countdown every second
-    const intervalId = setInterval(checkTimeout, 1000);
-
-    // Cleanup: clear the interval when the component unmounts
-    return () => clearInterval(intervalId);
-
-  }, [isOwner, STORAGE_KEY]); // Re-run if the owner or treeId changes
   
-  // Effect to load messages when treeId changes (from Code 2)
+  // Effect to load messages when treeId changes
   useEffect(() => {
     loadMessages();
   }, [treeId]);
 
-  // Real-time subscription (from Code 1, adapted for new data flow)
+  // Real-time subscription
   useEffect(() => {
     if (!treeId) return;
 
     const channel = supabaseService.subscribeToTree(treeId, (type, payload) => {
       if (type === 'tree') {
-        // When the tree changes, notify the PARENT (Code 2's pattern)
+        // When the tree changes, notify the parent
         if (onTreeUpdate) {
           onTreeUpdate(payload.new);
         }
       } else if (type === 'message') {
         // When a new message arrives, reload the messages list
         loadMessages();
-        // An alternative: optimistically add the new message
-        // setMessages(prev => [...prev, payload.new]);
       }
     });
 
     return () => {
       supabaseService.unsubscribeFromTree(channel);
     };
-  }, [treeId, onTreeUpdate]); // Make sure to include onTreeUpdate
+  }, [treeId, onTreeUpdate]);
 
-  // --- Handlers (from Code 2, with UI logic from Code 1) ---
+  // --- Handlers ---
 
   const handleMoodCheckIn = async (moodData) => {
     try {
-      // 1. Call Supabase
+      // Call Supabase (database handles cooldown check)
       const result = await supabaseService.addMoodCheckIn(treeId, moodData);
       
-      // 2. Notify parent of the updated tree (Code 2's pattern)
+      // Notify parent of the updated tree
       if (onTreeUpdate) {
         onTreeUpdate(result.tree);
       }
       
-      localStorage.setItem(STORAGE_KEY, new Date().getTime().toString());
-
-      // Manually disable the button immediately
+      // Immediately update the UI
       setCanCheckIn(false);
-
-      // 3. Close the modal (Code 1's UI logic)
       setShowCheckIn(false);
+      
+      // Recheck availability
+      checkCanCheckIn();
     } catch (error) {
       console.error('Error saving check-in:', error);
-      alert('Failed to save check-in. Please try again.');
+      alert(error.message || 'Failed to save check-in. Please try again.');
     }
   };
 
-  const handleNewMessage = async (messageData) => {
-    try {
-      // 1. Call Supabase
-      const result = await supabaseService.addMessage(treeId, messageData);
-      
-      // 3. Notify parent of the updated tree (e.g., new message count)
-      if (onTreeUpdate) {
-        onTreeUpdate(result.tree);
-      }
-      
-      // 4. Close the modal (Code 1's UI logic)
-      setShowEncouragement(false);
-    } catch (error) {
-      console.error('Error adding message:', error);
-      alert('Failed to send message. Please try again.');
+const handleNewMessage = async (messageData) => {
+  try {
+    // Validate treeId before attempting to add message
+    if (!treeId) {
+      throw new Error('No tree ID available');
+    }
+
+    // Data from SendEncouragement already has the right structure
+    // Just add sender_id if available
+    messageData.sender_id = userId || null;
+    
+    // Call Supabase - messageData already has: text, author, type, isEncouraging, sender_id
+    const result = await supabaseService.addMessage(treeId, messageData);
+    
+    // Notify parent of the updated tree
+    if (onTreeUpdate) {
+      onTreeUpdate(result.tree);
+    }
+    
+    // Close the modal
+    setShowEncouragement(false);
+  } catch (error) {
+    console.error('Error adding message:', error);
+    alert(error.message || 'Failed to send message. Please try again.');
+  }
+};
+  const handleRetakeQuiz = () => {
+    if (onRetakeQuiz) {
+      onRetakeQuiz();
     }
   };
 
@@ -178,20 +211,20 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate }) => {
     );
   }
 
-  // Full UI (from Code 1)
+  // Full UI
   return (
     <div className="mood-tree-container">
       <div className="mood-tree-header">
-        <h1>✨ Your Mood Tree ✨</h1>
+        <h1>
+          ✨  {treeData.tree_type ? treeData.tree_type.charAt(0).toUpperCase() + treeData.tree_type.slice(1) : ''} Tree ✨
+        </h1>
         <div className="tree-stats">
           <div className="stat">
             <Droplets size={20} />
-            {/* Use treeData prop */}
             <span>{treeData.mood_score} growth points</span>
           </div>
           <div className="stat">
             <MessageCircle size={20} />
-            {/* Use internal messages state */}
             <span>{messages.length} messages</span>
           </div>
         </div>
@@ -199,41 +232,68 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate }) => {
 
       <div className="stage-label">
         <Star size={16} />
-        {/* Use treeData prop */}
         <span>{stageNames[treeData.stage]}</span>
       </div>
 
       <TreeVisualization 
-        stage={treeData.stage}
-        messages={messages} // Pass internal messages state
+        currentStage={treeData.stage || 'seed'}
+        messages={messages}
         moodScore={treeData.mood_score}
+        treeType={treeData.tree_type || 'oak'}
       />
 
       <div className="mood-tree-controls">
         {isOwner && (
+          <>
+            <button 
+              className="btn btn-primary"
+              onClick={() => setShowCheckIn(true)}
+              disabled={!canCheckIn}
+            >
+              <Droplets size={18} />
+              {canCheckIn ? 'Daily Check-in' : timeLeftMessage}
+            </button>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => setShowShare(true)}
+            >
+              <Share2 size={18} />
+              Share Tree
+            </button>
+            <button 
+              className="btn btn-tertiary"
+              onClick={() => setShowRetakeModal(true)}
+            >
+              <RotateCcw size={18} />
+              Renew Seed
+            </button>
+          </>
+        )}
+        {!isOwner && (
           <button 
-            className="btn btn-primary"
-            onClick={() => setShowCheckIn(true)}
-            disabled={!canCheckIn}
+            className="btn btn-secondary"
+            onClick={() => setShowEncouragement(true)}
           >
-            <Droplets size={18} />
-            {canCheckIn ? 'Daily Check-in' : timeLeftMessage}
+            <MessageCircle size={18} />
+            Send Encouragement
           </button>
         )}
-        <button 
-          className="btn btn-secondary"
-          onClick={() => setShowEncouragement(true)}
-        >
-          <MessageCircle size={18} />
-          Send Encouragement
-        </button>
       </div>
 
-      {/* Modals (from Code 1) */}
+      {/* Modals */}
       {showCheckIn && (
         <DailyCheckIn
           onSubmit={handleMoodCheckIn}
           onClose={() => setShowCheckIn(false)}
+        />
+      )}
+
+      {showRetakeModal && (
+        <RetakeQuizModal
+          onConfirm={handleRetakeQuiz}
+          onCancel={() => setShowRetakeModal(false)}
+          timeLeftMessage={timeLeftResetTree}
+          canRetake={canResetTree}
         />
       )}
 
@@ -243,17 +303,26 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate }) => {
           onClose={() => setShowEncouragement(false)}
         />
       )}
+
+      {showShare && (
+        <TreeShare
+          treeId={treeId}
+          treeName={`My ${treeData.tree_type || ''} Tree`}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 };
 
-// Use the more thorough memoization from Code 2
+// Memoization with tree_type added
 export default memo(MoodTree, (prevProps, nextProps) => {
   return (
     prevProps.treeId === nextProps.treeId &&
     prevProps.userId === nextProps.userId &&
     prevProps.isOwner === nextProps.isOwner &&
     prevProps.treeData?.mood_score === nextProps.treeData?.mood_score &&
-    prevProps.treeData?.stage === nextProps.treeData?.stage
+    prevProps.treeData?.stage === nextProps.treeData?.stage &&
+    prevProps.treeData?.tree_type === nextProps.treeData?.tree_type
   );
 });

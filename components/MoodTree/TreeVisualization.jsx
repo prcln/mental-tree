@@ -3,12 +3,12 @@ import { Sun, Cloud, Sparkles } from 'lucide-react';
 import MessageDecoration from './MessageDecoration';
 import './TreeVisualization.css';
 
-import seed from "../../public/assets/trees/seed.svg";
-import sprout from "../../public/assets/trees/sprout.svg";
-import sapling from "../../public/assets/trees/sapling.svg";
-import young from "../../public/assets/trees/young.svg";
-import mature from "../../public/assets/trees/mature.svg";
-import blooming from "../../public/assets/trees/blooming.svg"
+import seed from "../../src/assets/trees/seed.svg";
+import sprout from "../../src/assets/trees/sprout.svg";
+import sapling from "../../src/assets/trees/sapling.svg";
+import young from "../../src/assets/trees/young.svg";
+import mature from "../../src/assets/trees/mature.svg";
+import blooming from "../../src/assets/trees/blooming.svg";
 
 const stageImages = {
   seed,
@@ -19,18 +19,7 @@ const stageImages = {
   blooming,
 };
 
-const TreeVisualization = ({ stage, messages, moodScore }) => {
-  const [currentStage, setCurrentStage] = useState('seed');
-
-  // Calculate stage based on mood score
-  useEffect(() => {
-    if (moodScore < 10) setCurrentStage('seed');
-    else if (moodScore < 30) setCurrentStage('sprout');
-    else if (moodScore < 60) setCurrentStage('sapling');
-    else if (moodScore < 100) setCurrentStage('young');
-    else if (moodScore < 150) setCurrentStage('mature');
-    else setCurrentStage('blooming');
-  }, [moodScore]);
+const TreeVisualization = ({ currentStage, messages, moodScore, treeType }) => {
 
   // Message positions on tree
   const messagePositions = [

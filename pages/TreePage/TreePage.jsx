@@ -12,24 +12,40 @@ const TreePage = () => {
   const navigate = useNavigate();
   const [currentTreeId, setCurrentTreeId] = useState(null);
   const [currentTree, setCurrentTree] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [treeLoaded, setTreeLoaded] = useState(false);
+  const [isRetakingQuiz, setIsRetakingQuiz] = useState(false);
 
   useEffect(() => {
-    // Only load tree once when user is available and tree hasn't been loaded
     if (user && !treeLoaded) {
-      loadUserTree(user.id);
+      initializeUserData(user.id);
     }
   }, [user, treeLoaded]);
 
-  const loadUserTree = async (userId) => {
+  const initializeUserData = async (userId) => {
     try {
       setLoading(true);
       setError(null);
       
+      // Load or create user profile
+      let profile;
+      try {
+        profile = await supabaseService.getUserProfile(userId);
+      } catch (err) {
+        // If profile doesn't exist, create it
+        profile = await supabaseService.createUserProfile(userId, {
+          username: user.email?.split('@')[0] || 'user',
+          display_name: user.email?.split('@')[0] || 'User',
+          seed_type: 'oak'
+        });
+      }
+      setUserProfile(profile);
+
+      // Load user trees
       const trees = await supabaseService.getUserTrees(userId);
       
       if (trees && trees.length > 0) {
@@ -42,16 +58,16 @@ const TreePage = () => {
           setShowQuiz(true);
         }
       } else {
-        // Create a new tree for the user
-        const newTree = await supabaseService.createTree(userId);
+        // Create a new tree for the user with their seed type
+        const newTree = await supabaseService.createTree(userId, profile.seed_type);
         setCurrentTreeId(newTree.id);
         setCurrentTree(newTree);
-        setShowQuiz(true); // New users must do the quiz
+        setShowQuiz(true);
       }
       
-      setTreeLoaded(true); // Mark tree as loaded
+      setTreeLoaded(true);
     } catch (err) {
-      console.error('Error loading user tree:', err);
+      console.error('Error initializing user data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -64,25 +80,39 @@ const TreePage = () => {
 
   const handleStartTree = async () => {
     try {
-      // Mark quiz as completed
       if (currentTreeId) {
-        await supabaseService.markQuizCompleted(currentTreeId);
-        setCurrentTree(prev => ({ ...prev, completed_quiz: true }));
+        if (isRetakingQuiz) {
+          // Reset tree with new tree type
+          const updatedTree = await supabaseService.resetTree(currentTreeId, quizResult.treeType);
+          setCurrentTree(updatedTree);
+          
+          // Update user profile seed type
+          await supabaseService.updateUserProfile(user.id, { 
+            seed_type: quizResult.treeType 
+          });
+          
+          setIsRetakingQuiz(false);
+        } else {
+          // First time completing quiz
+          const updatedTree = await supabaseService.markQuizCompleted(currentTreeId, quizResult.treeType);
+          setCurrentTree(updatedTree);
+          
+          // Update user profile seed type
+          await supabaseService.updateUserProfile(user.id, { 
+            seed_type: quizResult.treeType 
+          });
+        }
       }
       setQuizResult(null);
       setShowQuiz(false);
     } catch (err) {
-      console.error('Error marking quiz as completed:', err);
+      console.error('Error completing quiz:', err);
     }
   };
 
-  const stageNames = {
-    seed: 'Seed of Hope',
-    sprout: 'New Beginning',
-    sapling: 'Growing Strong',
-    young: 'Reaching Higher',
-    mature: 'Flourishing',
-    blooming: 'Full Bloom'
+  const handleRetakeQuiz = () => {
+    setIsRetakingQuiz(true);
+    setShowQuiz(true);
   };
 
   const handleSignOut = async () => {
@@ -107,29 +137,34 @@ const TreePage = () => {
     return (
       <div className="tree-page-error">
         <p>{error}</p>
-        <button className="retry-btn" onClick={() => loadUserTree(user.id)}>
+        <button className="retry-btn" onClick={() => initializeUserData(user.id)}>
           Retry
         </button>
       </div>
     );
   }
 
-  // Show quiz if not completed
+  // Show quiz
   if (showQuiz && !quizResult) {
     return <PersonalityQuiz onComplete={handleQuizComplete} />;
   }
 
   // Show quiz result
   if (quizResult) {
-    return <QuizResult result={quizResult} onContinue={handleStartTree} />;
+    return (
+      <QuizResult 
+        result={quizResult} 
+        onContinue={handleStartTree}
+        isRetaking={isRetakingQuiz}
+      />
+    );
   }
 
-  // Show tree if quiz completed or no tree
   if (!currentTreeId) {
     return (
       <div className="tree-page-error">
         <p>Unable to load tree</p>
-        <button className="retry-btn" onClick={() => loadUserTree(user.id)}>
+        <button className="retry-btn" onClick={() => initializeUserData(user.id)}>
           Create New Tree
         </button>
       </div>
@@ -138,9 +173,20 @@ const TreePage = () => {
 
   return (
     <div className="tree-page">
-      <button className="sign-out-btn" onClick={handleSignOut}>
-        Sign Out
-      </button>
+      <div className="tree-page-header">
+        <div className="header-user-info">
+          <span>Welcome, {userProfile?.display_name || 'User'}!</span>
+          {userProfile && (
+            <span className="user-stats">
+              🌳 {userProfile.total_trees_grown} trees grown • 
+              💬 {userProfile.total_comments_received} encouragements received
+            </span>
+          )}
+        </div>
+        <button className="sign-out-btn" onClick={handleSignOut}>
+          Sign Out
+        </button>
+      </div>
 
       <MoodTree 
         treeId={currentTreeId}
@@ -148,6 +194,7 @@ const TreePage = () => {
         isOwner={true}
         treeData={currentTree}
         onTreeUpdate={setCurrentTree}
+        onRetakeQuiz={handleRetakeQuiz}
       />
     </div>
   );

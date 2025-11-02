@@ -83,3 +83,31 @@
   background: #fff5f9;
   border-width: 3px;
 }
+
+.encouragement-message.has-warning {
+  border-color: #f59e0b;
+  background-color: #fffbeb;
+}
+
+.encouragement-warning {
+  background-color: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.encouragement-warning p {
+  margin: 0;
+  color: #92400e;
+  font-size: 14px;
+  line-height: 1.5;
+}
