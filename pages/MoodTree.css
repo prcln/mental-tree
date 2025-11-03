@@ -43,7 +43,7 @@
   font-weight: 500;
 }
 
-.stage-label {
+.stage-label-header {
   text-align: center;
   display: flex;
   align-items: center;
@@ -123,7 +123,7 @@
 }
 
 .modal h2 {
-  margin: 0 0 20px 0;
+  margin: 0;
   color: #2d5016;
   font-size: 1.5em;
 }

@@ -1,6 +1,7 @@
 .tree-share-modal {
   max-width: 550px;
   width: 100%;
+  overflow-y: auto;
 }
 
 .modal-header {
@@ -14,10 +15,10 @@
 
 .header-icon {
   color: #4CAF50;
+  
 }
 
 .modal-header h2 {
-  margin: 0;
   color: #2d5016;
   font-size: 1.8em;
   font-weight: 700;
@@ -180,21 +181,19 @@
 }
 
 .share-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 
 .share-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 16px;
+  width: 48px;
+  height: 48px;
   border: 2px solid;
   border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
   cursor: pointer;
   transition: all 0.3s;
   background: white;
@@ -321,6 +320,35 @@
   transform: translateY(0);
 }
 
+/* Loading Spinner */
+.share-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 15px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(76, 175, 80, 0.2);
+  border-top-color: #4CAF50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.share-loading p {
+  margin: 0;
+  color: #5a8a3a;
+  font-weight: 600;
+}
+
 /* Animations */
 @keyframes slideIn {
   from {
@@ -358,10 +386,6 @@
 
   .toggle-switch {
     align-self: flex-end;
-  }
-
-  .share-buttons {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -413,8 +437,8 @@
   }
 
   .share-btn {
-    padding: 10px 14px;
-    font-size: 13px;
+    width: 44px;
+    height: 44px;
   }
 
   .private-message {

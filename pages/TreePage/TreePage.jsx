@@ -124,6 +124,7 @@ const TreePage = () => {
     }
   };
 
+
   if (loading) {
     return (
       <div className="tree-page-loading">
@@ -173,21 +174,6 @@ const TreePage = () => {
 
   return (
     <div className="tree-page">
-      <div className="tree-page-header">
-        <div className="header-user-info">
-          <span>Welcome, {userProfile?.display_name || 'User'}!</span>
-          {userProfile && (
-            <span className="user-stats">
-              🌳 {userProfile.total_trees_grown} trees grown • 
-              💬 {userProfile.total_comments_received} encouragements received
-            </span>
-          )}
-        </div>
-        <button className="sign-out-btn" onClick={handleSignOut}>
-          Sign Out
-        </button>
-      </div>
-
       <MoodTree 
         treeId={currentTreeId}
         userId={user.id}

@@ -1,32 +1,41 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext/AuthContext';
+import { LanguageProvider } from '../contexts/LanguageContext/LanguageContext';
+
 import ProtectedRoute from '../components/ProtectedRoute';
 import AuthForm from '../components/AuthComponent/AuthComponent';
 import TreePage from '../pages/TreePage/TreePage';
 import SharedTreePage from '../pages/SharedTreePage/SharedTreePage';
 import './App.css';
+import { UserReportPage } from '../pages/UserPage/UserReportPage';
+import MainLayout from '../components/Layout/MainLayout';
 
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        {/* Login route */}
-        <Route path="/login" element={<AuthForm />} />
-        
-        {/* Public shared tree route - no auth required */}
-        <Route path="/tree/shared/:treeId" element={<SharedTreePage />} />
-        
-        {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<TreePage />} />
-          <Route path="/tree" element={<TreePage />} />
-        </Route>
+    <LanguageProvider>
+      <AuthProvider>
+        <Routes>
+          {/* Login route */}
+          <Route path="/login" element={<AuthForm />} />
+          
+          <Route element={<MainLayout />}>
+            {/* Public shared tree route - no auth required */}
+            <Route path="/tree/shared/:treeId" element={<SharedTreePage />} />
+            
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<TreePage />} />
+              <Route path="/tree" element={<TreePage />} />
+              <Route path="/report/:treeId" element={<UserReportPage />} />
+            </Route>
 
-        {/* Catch all - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AuthProvider>
+            {/* Catch all - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

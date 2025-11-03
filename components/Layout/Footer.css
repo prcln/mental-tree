@@ -1,0 +1,162 @@
+.site-footer {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 2px solid rgba(76, 175, 80, 0.2);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+  padding: 30px 30px;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer-content > p {
+  margin: 0;
+  color: #5a8a3a;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.footer-links a {
+  color: #2d5016;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.footer-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: #4caf50;
+}
+
+.footer-links a:hover::after {
+  width: 100%;
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) {
+  .site-footer {
+    padding: 25px 20px;
+  }
+
+  .footer-content {
+    gap: 16px;
+  }
+
+  .footer-content > p {
+    font-size: 13px;
+  }
+
+  .footer-links {
+    gap: 20px;
+  }
+
+  .footer-links a {
+    font-size: 13px;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .site-footer {
+    padding: 20px 20px;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .footer-content > p {
+    font-size: 12px;
+    order: 3;
+  }
+
+  .footer-links {
+    gap: 16px;
+    order: 2;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .footer-links a {
+    font-size: 12px;
+  }
+
+  .footer-content > div:last-child {
+    order: 1;
+  }
+}
+
+/* Small Mobile Responsive */
+@media (max-width: 480px) {
+  .site-footer {
+    padding: 18px 15px;
+  }
+
+  .footer-content {
+    gap: 14px;
+  }
+
+  .footer-content > p {
+    font-size: 11px;
+  }
+
+  .footer-links {
+    gap: 12px;
+  }
+
+  .footer-links a {
+    font-size: 11px;
+  }
+}
+
+/* Extra Small Devices */
+@media (max-width: 360px) {
+  .site-footer {
+    padding: 15px 12px;
+  }
+
+  .footer-content {
+    gap: 12px;
+  }
+
+  .footer-content > p {
+    font-size: 10px;
+  }
+
+  .footer-links {
+    gap: 10px;
+    flex-direction: column;
+  }
+
+  .footer-links a {
+    font-size: 10px;
+  }
+}

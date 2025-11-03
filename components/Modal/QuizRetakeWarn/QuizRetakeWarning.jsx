@@ -3,8 +3,8 @@ import { AlertTriangle, RotateCcw, X } from 'lucide-react';
 
 const RetakeQuizModal = ({ onConfirm, onCancel, timeLeftMessage, canRetake }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-slideUp">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-start justify-center overflow-y-auto p-4 z-50">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mt-20 animate-slideUp">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white relative">
           <button

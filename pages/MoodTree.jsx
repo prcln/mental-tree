@@ -1,11 +1,12 @@
 import React, { memo, useState, useEffect } from 'react';
 import { Droplets, MessageCircle, Star, Share2, RotateCcw } from 'lucide-react';
 import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
-import DailyCheckIn from '../components/MoodTree/DailyCheckin.jsx';
+import HourlyEmotionLog from '../components/MoodTree/HourlyEmotionLog.jsx';
 import SendEncouragement from '../components/MoodTree/SendEncouragement.jsx';
 import TreeShare from '../components/MoodTree/TreeShare.jsx';
 import supabaseService from '../services/supabaseService';
 import RetakeQuizModal from '../components/Modal/QuizRetakeWarn/QuizRetakeWarning.jsx';
+import MoodEncouragement from '../components/Modal/MoodEncouragementModal/MoodEncouragementModal.jsx';
 
 import './MoodTree.css';
 
@@ -21,12 +22,14 @@ const stageNames = {
 
 const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQuiz }) => {
   // --- State ---
-  
+  const [lastEmotionLog, setLastEmotionLog] = useState(null);
+
   // UI state for modals
   const [showCheckIn, setShowCheckIn] = useState(false);
-  const [showEncouragement, setShowEncouragement] = useState(false);
+  const [showComment, setShowComment] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showRetakeModal, setShowRetakeModal] = useState(false);
+  const [showEncouragement, setShowEncouragement] = useState(false);
 
   // Check-in availability state (now from database)
   const [canCheckIn, setCanCheckIn] = useState(true);
@@ -94,8 +97,6 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
   }
 };
 
-
-  // Effect to check check-in availability periodically (database-based)
   useEffect(() => {
     if (!isOwner) return;
 
@@ -140,10 +141,9 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
 
   // --- Handlers ---
 
-  const handleMoodCheckIn = async (moodData) => {
+  const handleEmotionCheckIn = async (moodData) => {
     try {
-      // Call Supabase (database handles cooldown check)
-      const result = await supabaseService.addMoodCheckIn(treeId, moodData);
+      const result = await supabaseService.addEmotionCheckIn(treeId, moodData);
       
       // Notify parent of the updated tree
       if (onTreeUpdate) {
@@ -154,6 +154,9 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
       setCanCheckIn(false);
       setShowCheckIn(false);
       
+      // Show encouragement message
+      setLastEmotionLog(moodData);
+      setShowEncouragement(true);
       // Recheck availability
       checkCanCheckIn();
     } catch (error) {
@@ -182,7 +185,7 @@ const handleNewMessage = async (messageData) => {
     }
     
     // Close the modal
-    setShowEncouragement(false);
+    setShowComment(false);
   } catch (error) {
     console.error('Error adding message:', error);
     alert(error.message || 'Failed to send message. Please try again.');
@@ -230,7 +233,7 @@ const handleNewMessage = async (messageData) => {
         </div>
       </div>
 
-      <div className="stage-label">
+      <div className="stage-label-header">
         <Star size={16} />
         <span>{stageNames[treeData.stage]}</span>
       </div>
@@ -251,7 +254,7 @@ const handleNewMessage = async (messageData) => {
               disabled={!canCheckIn}
             >
               <Droplets size={18} />
-              {canCheckIn ? 'Daily Check-in' : timeLeftMessage}
+              {canCheckIn ? 'Log your emotion!' : timeLeftMessage}
             </button>
             <button 
               className="btn btn-secondary"
@@ -272,7 +275,7 @@ const handleNewMessage = async (messageData) => {
         {!isOwner && (
           <button 
             className="btn btn-secondary"
-            onClick={() => setShowEncouragement(true)}
+            onClick={() => setShowComment(true)}
           >
             <MessageCircle size={18} />
             Send Encouragement
@@ -282,8 +285,8 @@ const handleNewMessage = async (messageData) => {
 
       {/* Modals */}
       {showCheckIn && (
-        <DailyCheckIn
-          onSubmit={handleMoodCheckIn}
+        <HourlyEmotionLog
+          onSubmit={handleEmotionCheckIn}
           onClose={() => setShowCheckIn(false)}
         />
       )}
@@ -297,10 +300,10 @@ const handleNewMessage = async (messageData) => {
         />
       )}
 
-      {showEncouragement && (
+      {showComment && (
         <SendEncouragement
           onSubmit={handleNewMessage}
-          onClose={() => setShowEncouragement(false)}
+          onClose={() => setShowComment(false)}
         />
       )}
 
@@ -309,6 +312,14 @@ const handleNewMessage = async (messageData) => {
           treeId={treeId}
           treeName={`My ${treeData.tree_type || ''} Tree`}
           onClose={() => setShowShare(false)}
+        />
+      )}
+
+      {showEncouragement && lastEmotionLog && (
+        <MoodEncouragement
+          score={lastEmotionLog.score}
+          hasContext={!!lastEmotionLog.context}
+          onClose={() => setShowEncouragement(false)}
         />
       )}
     </div>

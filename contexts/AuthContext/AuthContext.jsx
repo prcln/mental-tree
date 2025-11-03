@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
     // Only check session once on mount
     if (!sessionChecked) {
       supabase.auth.getSession().then(({ data: { session } }) => {
-        console.log('Initial session:', session);
         setUser(session?.user ?? null);
         setLoading(false);
         setSessionChecked(true);
@@ -29,7 +28,6 @@ export const AuthProvider = ({ children }) => {
 
     // Listen for auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session?.user);
       // Only update on actual auth changes, not on token refresh
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         setUser(session?.user ?? null);
