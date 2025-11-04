@@ -10,6 +10,7 @@ import SharedTreePage from '../pages/SharedTreePage/SharedTreePage';
 import './App.css';
 import { UserReportPage } from '../pages/UserPage/UserReportPage';
 import MainLayout from '../components/Layout/MainLayout';
+import CommunityGarden from '../pages/CommunityGardenPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
               <Route path="/" element={<TreePage />} />
               <Route path="/tree" element={<TreePage />} />
               <Route path="/report/:treeId" element={<UserReportPage />} />
+              <Route path="/garden" element={<CommunityGarden />} />
             </Route>
 
             {/* Catch all - redirect to home */}

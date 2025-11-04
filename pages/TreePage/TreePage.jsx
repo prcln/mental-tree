@@ -4,11 +4,13 @@ import { useAuth } from '../../contexts/AuthContext/AuthContext';
 import MoodTree from '../MoodTree';
 import PersonalityQuiz from '../../components/Quiz/Quiz';
 import QuizResult from '../../components/Quiz/QuizResult';
-import supabaseService from '../../services/supabaseService';
 import './TreePage.css';
+import { userService } from '../../services/userService';
+import { treeService } from '../../services/treeService';
 
 const TreePage = () => {
   const { user, signOut } = useAuth();
+  const currentUserId = user.id;
   const navigate = useNavigate();
   const [currentTreeId, setCurrentTreeId] = useState(null);
   const [currentTree, setCurrentTree] = useState(null);
@@ -26,7 +28,7 @@ const TreePage = () => {
     }
   }, [user, treeLoaded]);
 
-  const initializeUserData = async (userId) => {
+  const initializeUserData = async (currentUserId) => {
     try {
       setLoading(true);
       setError(null);
@@ -34,10 +36,10 @@ const TreePage = () => {
       // Load or create user profile
       let profile;
       try {
-        profile = await supabaseService.getUserProfile(userId);
+        profile = await userService.getUserProfile(currentUserId);
       } catch (err) {
         // If profile doesn't exist, create it
-        profile = await supabaseService.createUserProfile(userId, {
+        profile = await userService.createUserProfile(currentUserId, {
           username: user.email?.split('@')[0] || 'user',
           display_name: user.email?.split('@')[0] || 'User',
           seed_type: 'oak'
@@ -46,7 +48,7 @@ const TreePage = () => {
       setUserProfile(profile);
 
       // Load user trees
-      const trees = await supabaseService.getUserTrees(userId);
+      const trees = await treeService.getUserTrees(currentUserId);
       
       if (trees && trees.length > 0) {
         const tree = trees[0];
@@ -59,7 +61,7 @@ const TreePage = () => {
         }
       } else {
         // Create a new tree for the user with their seed type
-        const newTree = await supabaseService.createTree(userId, profile.seed_type);
+        const newTree = await treeService.createTree(currentUserId, profile.seed_type);
         setCurrentTreeId(newTree.id);
         setCurrentTree(newTree);
         setShowQuiz(true);
@@ -83,22 +85,22 @@ const TreePage = () => {
       if (currentTreeId) {
         if (isRetakingQuiz) {
           // Reset tree with new tree type
-          const updatedTree = await supabaseService.resetTree(currentTreeId, quizResult.treeType);
+          const updatedTree = await treeService.resetTree(currentTreeId, quizResult.treeType);
           setCurrentTree(updatedTree);
           
           // Update user profile seed type
-          await supabaseService.updateUserProfile(user.id, { 
+          await userService.updateUserProfile(user.id, { 
             seed_type: quizResult.treeType 
           });
           
           setIsRetakingQuiz(false);
         } else {
           // First time completing quiz
-          const updatedTree = await supabaseService.markQuizCompleted(currentTreeId, quizResult.treeType);
+          const updatedTree = await treeService.markQuizCompleted(currentTreeId, quizResult.treeType);
           setCurrentTree(updatedTree);
           
           // Update user profile seed type
-          await supabaseService.updateUserProfile(user.id, { 
+          await userService.updateUserProfile(user.id, { 
             seed_type: quizResult.treeType 
           });
         }
@@ -177,7 +179,7 @@ const TreePage = () => {
     <div className="tree-page">
       <MoodTree 
         treeId={currentTreeId}
-        userId={user.id}
+        userId={currentUserId}
         isOwner={true}
         treeData={currentTree}
         onTreeUpdate={setCurrentTree}

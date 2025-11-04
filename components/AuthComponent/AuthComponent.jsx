@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext/LanguageContext";
 
 const AuthForm = () => {
   const { signIn, signUp } = useAuth();
@@ -13,25 +14,27 @@ const AuthForm = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  const { t, language, setLanguage } = useLanguage();
+
   const handleSubmit = async () => {
     // Validation
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError(t('auth.error.unfilled'));
       return;
     }
 
     if (!isLogin && !confirmPassword) {
-      setError('Please confirm your password');
+      setError(t('auth.error.confirmPassword'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('auth.error.minChars'));
       return;
     }
 
     if (!isLogin && password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.error.notMatched'));
       return;
     }
 
@@ -43,7 +46,6 @@ const AuthForm = () => {
       if (isLogin) {
         // Sign in using context
         await signIn(email, password);
-        console.log('Sign in successful - redirecting to home');
         // Navigate to home after successful login
         navigate('/');
       } else {
@@ -52,9 +54,9 @@ const AuthForm = () => {
         
         // Check if email confirmation is required
         if (data?.user?.identities?.length === 0) {
-          setError('This email is already registered. Please sign in instead.');
+          setError(t('auth.error.alreadyReg'));
         } else {
-          setSuccessMessage('Account created successfully! You can now sign in.');
+          setSuccessMessage(t('auth.success.accCreate'));
           // Switch to login mode
           setTimeout(() => {
             setIsLogin(true);
@@ -65,7 +67,7 @@ const AuthForm = () => {
       }
     } catch (err) {
       console.error('Auth error:', err);
-      setError(err.message || 'Authentication failed');
+      setError(err.message || t('auth.error.authFailed'));
     } finally {
       setLoading(false);
     }
@@ -90,8 +92,8 @@ const AuthForm = () => {
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🌳</div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Mood Tree</h1>
-          <p className="text-gray-600">Grow your emotional wellness journey</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('auth.title')}</h1>
+          <p className="text-gray-600">{t('auth.subtitle')}</p>
         </div>
 
         <div className="space-y-4">
@@ -109,7 +111,7 @@ const AuthForm = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
+              {t('auth.email')}
             </label>
             <input
               type="email"
@@ -124,7 +126,7 @@ const AuthForm = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
+              {t('auth.password')}
             </label>
             <input
               type="password"
@@ -137,7 +139,7 @@ const AuthForm = () => {
             />
             {!isLogin && (
               <p className="text-xs text-gray-500 mt-1">
-                Minimum 6 characters
+                {t('auth.minChars')}
               </p>
             )}
           </div>
@@ -145,7 +147,7 @@ const AuthForm = () => {
           {!isLogin && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
+                {t('auth.confirmPassword')}
               </label>
               <input
                 type="password"
@@ -170,10 +172,10 @@ const AuthForm = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Loading...
+                {t('auth.loading')}
               </span>
             ) : (
-              isLogin ? 'Sign In' : 'Sign Up'
+              isLogin ? t('auth.signIn') : t('auth.signUp')
             )}
           </button>
         </div>
@@ -185,8 +187,8 @@ const AuthForm = () => {
             className="text-green-600 hover:text-green-700 font-medium disabled:opacity-50"
           >
             {isLogin 
-              ? "Don't have an account? Sign up" 
-              : 'Already have an account? Sign in'}
+              ? t('auth.noAccount')
+              : t('auth.hasAccount')}
           </button>
         </div>
       </div>

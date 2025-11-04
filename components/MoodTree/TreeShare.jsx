@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Share2, Copy, Check, Mail, Link2 } from 'lucide-react';
-import supabaseService from '../../services/supabaseService';
+
 import './TreeShare.css';
+import { treeService } from '../../services/treeService';
 
 const TreeShare = ({ treeId, treeName, onClose }) => {
   const [copied, setCopied] = useState(false);
@@ -14,7 +15,7 @@ const TreeShare = ({ treeId, treeName, onClose }) => {
     const fetchTreeStatus = async () => {
       try {
         setLoading(true);
-        const tree = await supabaseService.getTree(treeId);
+        const tree = await treeService.getTree(treeId);
         setIsPublic(tree.is_public);
       } catch (err) {
         console.error('Failed to fetch tree status:', err);
@@ -40,7 +41,7 @@ const TreeShare = ({ treeId, treeName, onClose }) => {
 
   const handleTogglePublic = async () => {
     try {
-      await supabaseService.toggleTreePublic(treeId);
+      await treeService.toggleTreePublic(treeId);
       setIsPublic(!isPublic);
     } catch (err) {
       console.error('Failed to toggle public status:', err);

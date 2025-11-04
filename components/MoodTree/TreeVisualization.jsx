@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sun, Cloud, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
-import MessageDecoration from './MessageDecoration';
+import MessageDecoration from '../MessageComponents/MessageDecoration';
 import './TreeVisualization.css';
 
 import seed from "../../src/assets/trees/seed.svg";
@@ -10,6 +10,7 @@ import young from "../../src/assets/trees/young.svg";
 import mature from "../../src/assets/trees/mature.svg";
 import blooming from "../../src/assets/trees/blooming.svg";
 import { pointsUntilNextStage } from '../../services/stageHelper';
+import { useAuth } from '../../contexts/AuthContext/AuthContext';
 
 const stageImages = {
   seed,
@@ -73,7 +74,17 @@ const getMessagePositions = (stage) => {
   return positions[stage] || [];
 };
 
-const TreeVisualization = ({ currentStage, messages, moodScore, treeType }) => {
+const getCommunityTreeStyle = () => {
+  return {
+    // Colorful, vibrant community tree
+    trunkColor: '#8B7355',
+    leavesColor: '#multi-color', // gradient effect
+    flowersEnabled: true,
+    communityStyle: true
+  };
+};
+
+const TreeVisualization = ({ currentStage, messages, moodScore, treeType, currentUserId }) => {
   const [currentPage, setCurrentPage] = useState(0);
 
   const messagePositions = getMessagePositions(currentStage);
@@ -180,6 +191,8 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType }) => {
                 message={message}
                 position={currentPositions[index]}
                 index={startIdx + index}
+                currentUserId={currentUserId}
+                onUpdate={() => {}}
               />
             ))}
           </div>

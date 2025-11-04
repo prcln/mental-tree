@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './SendEncouragement.css';
+import { useAuth } from '../../contexts/AuthContext/AuthContext';
 
 // List of encouraging words to check for
 const ENCOURAGING_WORDS = [
@@ -37,11 +38,13 @@ const isEncouragingMessage = (message) => {
   return ENCOURAGING_WORDS.some(word => lowerMessage.includes(word.toLowerCase()));
 };
 
-const SendEncouragement = ({ onSubmit, onClose }) => {
+const SendEncouragement = ({ onSubmit, onClose, isCommunityGarden = false }) => {
   const [message, setMessage] = useState('');
   const [author, setAuthor] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('flower');
   const [showWarning, setShowWarning] = useState(false);
+
+  const { user } = useAuth();
 
   const iconOptions = [
     { id: 'butterfly', label: '🦋 Butterfly', icon: '/assets/icons/butterfly.svg' },
@@ -70,14 +73,16 @@ const SendEncouragement = ({ onSubmit, onClose }) => {
       author: author.trim() || 'Anonymous Friend',
       type: selectedIcon,
       isEncouraging: isEncouraging,
-      sender_id: null 
+      sender_id: user.id
     });
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal encouragement-modal" onClick={e => e.stopPropagation()}>
-        <h2>Send a message of support 💫</h2>
+        <h2>{isCommunityGarden 
+            ? '🌸 Share with the Community' 
+            : 'Send a message of support 💫'}</h2>
         
         <textarea
           placeholder="Write something encouraging..."

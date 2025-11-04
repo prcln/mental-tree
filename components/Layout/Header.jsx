@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext/AuthContext';
-import supabaseService from '../../services/supabaseService';
+
 import './Header.css';
+import { userService } from '../../services/userService';
+import { treeService } from '../../services/treeService';
 
 function Header() {
   const { user, signOut } = useAuth();
@@ -13,7 +15,6 @@ function Header() {
   const [viewingProfile, setViewingProfile] = useState(null);
   
   // Determine context
-  const isOwnTree = location.pathname === '/tree';
   const isViewingOtherTree = location.pathname.match(/^\/tree\/(.+)$/);
   const viewedUserId = isViewingOtherTree ? isViewingOtherTree[1] : null;
 
@@ -35,10 +36,10 @@ function Header() {
 
   const loadUserProfile = async () => {
     try {
-      const profile = await supabaseService.getUserProfile(user.id);
+      const profile = await userService.getUserProfile(user.id);
       setUserProfile(profile);
       
-      const trees = await supabaseService.getUserTrees(user.id);
+      const trees = await treeService.getUserTrees(user.id);
       
       if (trees && trees.length > 0) {
         const tree = trees[0];
@@ -73,6 +74,10 @@ function Header() {
 
   const handleHome = () => {
     navigate('/tree');
+  };
+
+  const handleGarden = () => {
+    navigate('/garden');
   };
 
   const handleSignIn = () => {
@@ -165,6 +170,9 @@ function Header() {
         )}
       </div>
       <div className="header-actions">
+        <button className="report-btn" onClick={handleGarden}>
+            Garden
+        </button>
         <button 
           className="my-tree-btn" onClick={handleHome}>
             My Tree

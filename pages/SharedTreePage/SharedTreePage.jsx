@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Home, Lock } from 'lucide-react';
 import MoodTree from '../MoodTree';
-import supabaseService from '../../services/supabaseService';
+
 import './SharedTreePage.css';
 import { useAuth } from '../../contexts/AuthContext/AuthContext';
+import { treeService } from '../../services/treeService';
+import { userService } from '../../services/userService';
 
 const SharedTreePage = () => {
   const { treeId } = useParams();
@@ -24,7 +26,7 @@ const SharedTreePage = () => {
       setLoading(true);
       setError(null);
       
-      const treeData = await supabaseService.getTree(treeId);
+      const treeData = await treeService.getTree(treeId);
       
       // Check if tree is public
       if (!treeData.is_public) {
@@ -36,7 +38,7 @@ const SharedTreePage = () => {
       
       // Load owner's profile
       try {
-        const profile = await supabaseService.getUserProfile(treeData.user_id);
+        const profile = await userService.getUserProfile(treeData.user_id);
         setOwnerProfile(profile);
       } catch (err) {
         console.error('Error loading owner profile:', err);

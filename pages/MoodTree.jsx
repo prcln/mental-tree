@@ -4,11 +4,14 @@ import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
 import HourlyEmotionLog from '../components/MoodTree/HourlyEmotionLog.jsx';
 import SendEncouragement from '../components/MoodTree/SendEncouragement.jsx';
 import TreeShare from '../components/MoodTree/TreeShare.jsx';
-import supabaseService from '../services/supabaseService';
 import RetakeQuizModal from '../components/Modal/QuizRetakeWarn/QuizRetakeWarning.jsx';
 import MoodEncouragement from '../components/Modal/MoodEncouragementModal/MoodEncouragementModal.jsx';
 
 import './MoodTree.css';
+import { messageService } from '../services/messageService.js';
+import { cooldownService } from '../services/cooldownService.js';
+import { emotionService } from '../services/emotionService.js';
+import { realtimeService } from '../services/realtimeService.js';
 
 // Constant for stage names
 const stageNames = {
@@ -20,7 +23,7 @@ const stageNames = {
   blooming: 'Full Bloom'
 };
 
-const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQuiz }) => {
+const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRetakeQuiz }) => {
   // --- State ---
   const [lastEmotionLog, setLastEmotionLog] = useState(null);
 
@@ -52,7 +55,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     if (!treeId) return;
     try {
       setError(null);
-      const data = await supabaseService.getMessages(treeId);
+      const data = await messageService.getMessages(treeId);
       setMessages(data);
     } catch (err) {
       console.error('Error loading messages:', err);
@@ -65,7 +68,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     if (!isOwner || !treeId) return;
     
     try {
-      const { canCheckIn: able, timeLeft } = await supabaseService.canCheckIn(treeId);
+      const { canCheckIn: able, timeLeft } = await cooldownService.canCheckIn(treeId);
       setCanCheckIn(able);
       
       if (!able && timeLeft > 0) {
@@ -84,7 +87,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     if (!isOwner || !treeId) return;
     
     try {
-      const { canResetTree: able, timeLeft } = await supabaseService.canResetTree(treeId);
+      const { canResetTree: able, timeLeft } = await cooldownService.canResetTree(treeId);
       setCanResetTree(able);
       
       if (!able && timeLeft > 0) {
@@ -126,7 +129,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
   useEffect(() => {
     if (!treeId) return;
 
-    const channel = supabaseService.subscribeToTree(treeId, (type, payload) => {
+    const channel = realtimeService.subscribeToTree(treeId, (type, payload) => {
       if (type === 'tree') {
         // When the tree changes, notify the parent
         if (onTreeUpdate) {
@@ -139,7 +142,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     });
 
     return () => {
-      supabaseService.unsubscribeFromTree(channel);
+      realtimeService.unsubscribeFromTree(channel);
     };
   }, [treeId, onTreeUpdate, loadMessages]);
 
@@ -151,7 +154,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     isSubmittingRef.current = true;
 
     try {
-      const result = await supabaseService.addEmotionCheckIn(treeId, moodData);
+      const result = await emotionService.addEmotionCheckIn(treeId, moodData);
       
       // Notify parent of the updated tree
       if (onTreeUpdate) {
@@ -189,10 +192,10 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
 
       // Data from SendEncouragement already has the right structure
       // Just add sender_id if available
-      messageData.sender_id = userId || null;
+      messageData.sender_id = currentUserId || null;
       
       // Call Supabase - messageData already has: text, author, type, isEncouraging, sender_id
-      const result = await supabaseService.addMessage(treeId, messageData);
+      const result = await messageService.addMessage(treeId, messageData);
       
       // Notify parent of the updated tree
       if (onTreeUpdate) {
@@ -207,7 +210,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     } finally {
       isSubmittingRef.current = false;
     }
-  }, [treeId, userId, onTreeUpdate]);
+  }, [treeId, currentUserId, onTreeUpdate]);
 
   const handleRetakeQuiz = useCallback(() => {
     if (onRetakeQuiz) {
@@ -261,6 +264,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
         messages={messages}
         moodScore={treeData.mood_score}
         treeType={treeData.tree_type || 'oak'}
+        currentUserId={currentUserId}
       />
 
       <div className="mood-tree-controls">
@@ -348,7 +352,7 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
 export default memo(MoodTree, (prevProps, nextProps) => {
   return (
     prevProps.treeId === nextProps.treeId &&
-    prevProps.userId === nextProps.userId &&
+    prevProps.currentUserId === nextProps.userId &&
     prevProps.isOwner === nextProps.isOwner
   );
 });

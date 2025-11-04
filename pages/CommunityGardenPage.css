@@ -1,0 +1,486 @@
+.community-garden-container {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Sky Background */
+.garden-sky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40vh;
+  background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 100%);
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  background: white;
+  border-radius: 100px;
+  opacity: 0.8;
+  animation: float 20s infinite ease-in-out;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: white;
+  border-radius: 100px;
+}
+
+.cloud-1 {
+  width: 100px;
+  height: 40px;
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.cloud-1::before {
+  width: 50px;
+  height: 50px;
+  top: -25px;
+  left: 10px;
+}
+
+.cloud-1::after {
+  width: 60px;
+  height: 40px;
+  top: -15px;
+  right: 10px;
+}
+
+.cloud-2 {
+  width: 120px;
+  height: 45px;
+  top: 20%;
+  right: 20%;
+  animation-delay: 3s;
+}
+
+.cloud-2::before {
+  width: 55px;
+  height: 55px;
+  top: -28px;
+  left: 15px;
+}
+
+.cloud-2::after {
+  width: 65px;
+  height: 45px;
+  top: -18px;
+  right: 15px;
+}
+
+.cloud-3 {
+  width: 90px;
+  height: 35px;
+  top: 15%;
+  left: 50%;
+  animation-delay: 6s;
+}
+
+.cloud-3::before {
+  width: 45px;
+  height: 45px;
+  top: -22px;
+  left: 10px;
+}
+
+.cloud-3::after {
+  width: 50px;
+  height: 35px;
+  top: -12px;
+  right: 10px;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(20px) translateY(-10px);
+  }
+}
+
+/* Header */
+.garden-header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem 1rem 1rem;
+}
+
+.garden-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+  text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+}
+
+.garden-subtitle {
+  font-size: 1.1rem;
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+}
+
+.garden-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.garden-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-weight: 500;
+  color: #2d3748;
+}
+
+/* Grass Field */
+.garden-content {
+  position: relative;
+  z-index: 1;
+  margin-top: 2rem;
+}
+
+.grass-field {
+  position: relative;
+  min-height: 60vh;
+  background: linear-gradient(180deg, #7CB342 0%, #558B2F 100%);
+  padding: 3rem 1rem 6rem;
+  border-top: 5px solid #689F38;
+}
+
+.grass-field::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: 
+    radial-gradient(ellipse at 50% 100%, transparent 40%, #7CB342 41%),
+    radial-gradient(ellipse at 0% 100%, transparent 40%, #7CB342 41%),
+    radial-gradient(ellipse at 100% 100%, transparent 40%, #7CB342 41%);
+  background-size: 60px 30px;
+  background-position: 0 0, 20px 0, 40px 0;
+  background-repeat: repeat-x;
+}
+
+/* Decorative Flowers */
+.decoration-flowers {
+  position: absolute;
+  top: 1rem;
+  left: 0;
+  right: 0;
+  height: 50px;
+  pointer-events: none;
+}
+
+.deco-flower {
+  position: absolute;
+  font-size: 2rem;
+  animation: sway 3s ease-in-out infinite;
+}
+
+@keyframes sway {
+  0%, 100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+/* Messages Grid */
+.messages-grid {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.message-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.5s ease-out backwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.message-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF);
+  background-size: 200% 100%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.message-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.message-text {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #2d3748;
+  margin: 0;
+  word-wrap: break-word;
+}
+
+.message-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.message-author {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.message-time {
+  font-size: 0.75rem;
+}
+
+/* No Messages State */
+.no-messages {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1rem;
+  color: white;
+}
+
+.no-messages-icon {
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.no-messages p {
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Floating Action Button */
+.fab-button {
+  position: fixed;
+  bottom: 6rem;
+  right: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgb(218, 9, 148);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(154, 52, 182, 0.4);
+  transition: all 0.3s ease;
+  z-index: 20;
+}
+
+.fab-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(169, 57, 200, 0.4);
+}
+
+.fab-button:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Garden Info */
+.garden-info {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(180deg, #558B2F 0%, #33691E 100%);
+  color: white;
+}
+
+.garden-info p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Loading and Error States */
+.garden-loading,
+.garden-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.loading-icon {
+  animation: spin 2s linear infinite;
+  color: #667eea;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .garden-header h1 {
+    font-size: 2rem;
+  }
+  
+  .garden-subtitle {
+    font-size: 1rem;
+  }
+
+  .messages-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .fab-button {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .fab-button span {
+    display: none;
+  }
+
+  .decoration-flowers .deco-flower {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .garden-stats {
+    gap: 1rem;
+  }
+
+  .garden-stats .stat {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Update the grass field to support absolute positioning */
+.grass-field {
+  position: relative;
+  min-height: 60vh;
+  background: linear-gradient(180deg, #7CB342 0%, #558B2F 100%);
+  padding: 3rem 1rem 6rem;
+  border-top: 5px solid #689F38;
+}
+
+/* Container for messages with absolute positioning */
+.messages-container {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+  padding: 2rem 0;
+}
+
+/* No messages state */
+.no-messages {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  width: 100%;
+  padding: 3rem 1rem;
+}
+
+.no-messages-icon {
+  margin: 0 auto 1rem;
+  opacity: 0.8;
+}
+
+.no-messages p {
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .messages-container {
+    min-height: 500px;
+  }
+  
+  /* Make message icons slightly smaller on mobile */
+  .messages-container .absolute span {
+    font-size: 2rem !important;
+  }
+}

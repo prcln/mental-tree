@@ -1,0 +1,1 @@
+export const COMMUNITY_GARDEN_ID = '90af00ea-0dd7-494a-9cdf-1ae786667802';
