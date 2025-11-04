@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { Droplets, MessageCircle, Star, Share2, RotateCcw } from 'lucide-react';
 import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
 import HourlyEmotionLog from '../components/MoodTree/HourlyEmotionLog.jsx';
@@ -41,11 +41,14 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
   // Data state for messages (managed internally)
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
+
+  // Use ref to prevent double-submission
+  const isSubmittingRef = useRef(false);
   
   // --- Data Loading ---
 
   // Function to load only messages
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!treeId) return;
     try {
       setError(null);
@@ -55,10 +58,10 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
       console.error('Error loading messages:', err);
       setError(err.message);
     }
-  };
+  }, [treeId]);
 
   // Check if user can check in (from database)
-  const checkCanCheckIn = async () => {
+  const checkCanCheckIn = useCallback(async () => {
     if (!isOwner || !treeId) return;
     
     try {
@@ -75,28 +78,29 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     } catch (err) {
       console.error('Error checking check-in availability:', err);
     }
-  };
+  }, [isOwner, treeId]);
 
-  const checkCanResetTree = async () => {
-  if (!isOwner || !treeId) return;
-  
-  try {
-    const { canResetTree: able, timeLeft } = await supabaseService.canResetTree(treeId);
-    setCanResetTree(able);
+  const checkCanResetTree = useCallback(async () => {
+    if (!isOwner || !treeId) return;
     
-    if (!able && timeLeft > 0) {
-      const hours = Math.floor(timeLeft / (1000 * 60 * 60)); 
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)); 
-      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000); 
-      setTimeLeftResetTree(`Wait ${hours}h ${minutes}m ${seconds}s`);
-    } else {
-      setTimeLeftResetTree('');
+    try {
+      const { canResetTree: able, timeLeft } = await supabaseService.canResetTree(treeId);
+      setCanResetTree(able);
+      
+      if (!able && timeLeft > 0) {
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60)); 
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60)); 
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000); 
+        setTimeLeftResetTree(`Wait ${hours}h ${minutes}m ${seconds}s`);
+      } else {
+        setTimeLeftResetTree('');
+      }
+    } catch (err) {
+      console.error('Error checking reset availability:', err);
     }
-  } catch (err) {
-    console.error('Error checking check-in availability:', err);
-  }
-};
+  }, [isOwner, treeId]);
 
+  // Effect for cooldown checks
   useEffect(() => {
     if (!isOwner) return;
 
@@ -110,13 +114,13 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
       clearInterval(intervalId1);
       clearInterval(intervalId2);
     };
-  }, [isOwner, treeId]);
+  }, [isOwner, checkCanCheckIn, checkCanResetTree]);
 
   
   // Effect to load messages when treeId changes
   useEffect(() => {
     loadMessages();
-  }, [treeId]);
+  }, [loadMessages]);
 
   // Real-time subscription
   useEffect(() => {
@@ -137,11 +141,15 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
     return () => {
       supabaseService.unsubscribeFromTree(channel);
     };
-  }, [treeId, onTreeUpdate]);
+  }, [treeId, onTreeUpdate, loadMessages]);
 
   // --- Handlers ---
 
-  const handleEmotionCheckIn = async (moodData) => {
+  const handleEmotionCheckIn = useCallback(async (moodData) => {
+    // Prevent double submission
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     try {
       const result = await supabaseService.addEmotionCheckIn(treeId, moodData);
       
@@ -157,45 +165,55 @@ const MoodTree = ({ treeId, userId, isOwner, treeData, onTreeUpdate, onRetakeQui
       // Show encouragement message
       setLastEmotionLog(moodData);
       setShowEncouragement(true);
+      
       // Recheck availability
       checkCanCheckIn();
     } catch (error) {
       console.error('Error saving check-in:', error);
       alert(error.message || 'Failed to save check-in. Please try again.');
+    } finally {
+      isSubmittingRef.current = false;
     }
-  };
+  }, [treeId, onTreeUpdate, checkCanCheckIn]);
 
-const handleNewMessage = async (messageData) => {
-  try {
-    // Validate treeId before attempting to add message
-    if (!treeId) {
-      throw new Error('No tree ID available');
-    }
+  const handleNewMessage = useCallback(async (messageData) => {
+    // Prevent double submission
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
-    // Data from SendEncouragement already has the right structure
-    // Just add sender_id if available
-    messageData.sender_id = userId || null;
-    
-    // Call Supabase - messageData already has: text, author, type, isEncouraging, sender_id
-    const result = await supabaseService.addMessage(treeId, messageData);
-    
-    // Notify parent of the updated tree
-    if (onTreeUpdate) {
-      onTreeUpdate(result.tree);
+    try {
+      // Validate treeId before attempting to add message
+      if (!treeId) {
+        throw new Error('No tree ID available');
+      }
+
+      // Data from SendEncouragement already has the right structure
+      // Just add sender_id if available
+      messageData.sender_id = userId || null;
+      
+      // Call Supabase - messageData already has: text, author, type, isEncouraging, sender_id
+      const result = await supabaseService.addMessage(treeId, messageData);
+      
+      // Notify parent of the updated tree
+      if (onTreeUpdate) {
+        onTreeUpdate(result.tree);
+      }
+      
+      // Close the modal
+      setShowComment(false);
+    } catch (error) {
+      console.error('Error adding message:', error);
+      alert(error.message || 'Failed to send message. Please try again.');
+    } finally {
+      isSubmittingRef.current = false;
     }
-    
-    // Close the modal
-    setShowComment(false);
-  } catch (error) {
-    console.error('Error adding message:', error);
-    alert(error.message || 'Failed to send message. Please try again.');
-  }
-};
-  const handleRetakeQuiz = () => {
+  }, [treeId, userId, onTreeUpdate]);
+
+  const handleRetakeQuiz = useCallback(() => {
     if (onRetakeQuiz) {
       onRetakeQuiz();
     }
-  };
+  }, [onRetakeQuiz]);
 
   // --- Render Logic ---
 
@@ -283,7 +301,7 @@ const handleNewMessage = async (messageData) => {
         )}
       </div>
 
-      {/* Modals */}
+      {/* Modals - Only render if showing */}
       {showCheckIn && (
         <HourlyEmotionLog
           onSubmit={handleEmotionCheckIn}
@@ -326,14 +344,11 @@ const handleNewMessage = async (messageData) => {
   );
 };
 
-// Memoization with tree_type added
+// Simplified memoization - only check if core IDs change
 export default memo(MoodTree, (prevProps, nextProps) => {
   return (
     prevProps.treeId === nextProps.treeId &&
     prevProps.userId === nextProps.userId &&
-    prevProps.isOwner === nextProps.isOwner &&
-    prevProps.treeData?.mood_score === nextProps.treeData?.mood_score &&
-    prevProps.treeData?.stage === nextProps.treeData?.stage &&
-    prevProps.treeData?.tree_type === nextProps.treeData?.tree_type
+    prevProps.isOwner === nextProps.isOwner
   );
 });
