@@ -4,8 +4,7 @@ import MessageModal from './MessageModal';
 
 const MessageDecoration = ({ message, position, index, currentUserId, onUpdate }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-
+  const [showModal, setShowModal] = useState(false)
   // Icon mapping
   const iconMap = {
     butterfly: '🦋',

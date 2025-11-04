@@ -4,9 +4,12 @@ import { useAuth } from '../../contexts/AuthContext/AuthContext';
 import MoodTree from '../MoodTree';
 import PersonalityQuiz from '../../components/Quiz/Quiz';
 import QuizResult from '../../components/Quiz/QuizResult';
+import { Loading } from '../../components/Others/Loading';
+
 import './TreePage.css';
 import { userService } from '../../services/userService';
 import { treeService } from '../../services/treeService';
+import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
 const TreePage = () => {
   const { user, signOut } = useAuth();
@@ -21,6 +24,8 @@ const TreePage = () => {
   const [quizResult, setQuizResult] = useState(null);
   const [treeLoaded, setTreeLoaded] = useState(false);
   const [isRetakingQuiz, setIsRetakingQuiz] = useState(false);
+
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (user && !treeLoaded) {
@@ -129,9 +134,8 @@ const TreePage = () => {
 
   if (loading) {
     return (
-      <div className="tree-page-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading your tree...</p>
+      <div className='tree-page-loading'>
+      <Loading message={t('common.loading')} size="medium" />
       </div>
     );
   }
@@ -179,7 +183,7 @@ const TreePage = () => {
     <div className="tree-page">
       <MoodTree 
         treeId={currentTreeId}
-        userId={currentUserId}
+        currentUserId={currentUserId}
         isOwner={true}
         treeData={currentTree}
         onTreeUpdate={setCurrentTree}

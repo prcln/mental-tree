@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { MessageCircle, Users, Heart, Flower2, Sparkles } from 'lucide-react';
 import SendEncouragement from '../components/MoodTree/SendEncouragement.jsx';
 import MessageDecoration from '../components/MessageComponents/MessageDecoration.jsx';
 import { messageService } from '../services/messageService.js';
 import { realtimeService } from '../services/realtimeService.js';
 import { useLanguage } from '../contexts/LanguageContext/LanguageContext.jsx';
+import { Loading } from '../components/Others/Loading.jsx';
 
 import './CommunityGardenPage.css';
 import { useAuth } from '../contexts/AuthContext/AuthContext.jsx';
@@ -20,7 +20,7 @@ const CommunityGarden = () => {
 
   const { user } = useAuth();
 
-  // Generate positions for messages on the grass
+  // TODO:Fix this into a constant list of positions
   const generateMessagePositions = (messageCount) => {
     const positions = [];
     const rows = Math.ceil(messageCount / 5);
@@ -128,9 +128,8 @@ const CommunityGarden = () => {
 
   if (loading) {
     return (
-      <div className="garden-loading">
-        <Sparkles className="loading-icon" size={48} />
-        <p>Loading community garden...</p>
+      <div>
+      <Loading message={t('common.loading')} size="full" />
       </div>
     );
   }
@@ -183,7 +182,7 @@ const CommunityGarden = () => {
                 <p>Be the first to plant a message in the garden!</p>
               </div>
             ) : (
-              messages.map((message, index) => ({createPortal(
+              messages.map((message, index) => (
                 <MessageDecoration
                   key={message.id}
                   message={message}
@@ -191,9 +190,7 @@ const CommunityGarden = () => {
                   index={index}
                   currentUserId={user.id}
                   onUpdate={(updates) => handleMessageUpdate(message.id, updates)}
-                />,
-                  document.getElementById('modal-root')
-              )})
+                />
               ))
             )}
           </div>
@@ -222,6 +219,7 @@ const CommunityGarden = () => {
           onSubmit={handleNewMessage}
           onClose={() => setShowMessageModal(false)}
           isCommunityGarden={true}
+          currentUserId={user.id}
         />
       )}
     </div>

@@ -14,48 +14,78 @@ export const DailyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
   const [loading, setLoading] = useState(true);
   const [weekData, setWeekData] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [cachedData, setCachedData] = useState({}); // Cache by date string
 
+  // Load data for entire month on mount
   useEffect(() => {
-    loadDailyData();
-    loadWeekData();
-  }, [selectedDate, treeId]);
+    loadMonthData();
+  }, [treeId]);
 
-  const loadDailyData = async () => {
+  // Update displayed data when date changes
+  useEffect(() => {
+    updateDisplayedData();
+  }, [selectedDate, cachedData]);
+
+  // Load entire month of data at once
+  const loadMonthData = async () => {
     try {
       setLoading(true);
-      const start = new Date(selectedDate);
+      
+      // Get start of current month
+      const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
       start.setHours(0, 0, 0, 0);
-      const end = new Date(selectedDate);
+      
+      // Get end of current month
+      const end = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
       end.setHours(23, 59, 59, 999);
 
       const data = await emotionService.getDailyEmotionSummary(treeId, start, end);
-      setDailyData(data[0] || null);
+      
+      // Cache all days by date string
+      const cache = {};
+      data.forEach(day => {
+        cache[day.date] = day;
+      });
+      
+      setCachedData(cache);
     } catch (error) {
-      console.error('Error loading daily data:', error);
+      console.error('Error loading month data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadWeekData = async () => {
-    try {
-      const start = new Date(selectedDate);
-      start.setDate(start.getDate() - 6);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(selectedDate);
-      end.setHours(23, 59, 59, 999);
-
-      const data = await emotionService.getDailyEmotionSummary(treeId, start, end);
-      setWeekData(data);
-    } catch (error) {
-      console.error('Error loading week data:', error);
+  // Update displayed data from cache when date changes
+  const updateDisplayedData = () => {
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dayData = cachedData[dateStr] || null;
+    setDailyData(dayData);
+    
+    // Calculate week data from cache
+    const weekDays = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(selectedDate);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      if (cachedData[dateStr]) {
+        weekDays.push(cachedData[dateStr]);
+      }
     }
+    setWeekData(weekDays);
   };
 
-  const changeDate = ({ days, lang}) => {
+  const changeDate = (days) => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + days);
-    setSelectedDate(newDate);
+    
+    // Check if we need to load a new month
+    if (newDate.getMonth() !== selectedDate.getMonth()) {
+      setSelectedDate(newDate);
+      // Reload data for the new month
+      setTimeout(() => loadMonthData(), 0);
+    } else {
+      setSelectedDate(newDate);
+    }
   };
 
   const formatDate = (date, timeLang, isMobile = false) => {

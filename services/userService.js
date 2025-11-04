@@ -44,24 +44,43 @@ export const userService = {
     if (!userId) return;
 
     try {
-      const { data: profiles, error } = await supabase
+      const { data: profiles, error: fetchError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', userId);
       
-      if (error || !profiles?.length) {
+      if (fetchError) {
+        console.error('Error fetching user profile:', fetchError);
+        return;
+      }
+
+      if (!profiles?.length) {
         console.log('Skipping stats update - user profile not found');
         return;
       }
 
       const profile = profiles[0];
-      await supabase
+      const { data, error: updateError } = await supabase
         .from('user_profiles')
         .update({
           [stat]: (profile[stat] || 0) + 1,
           last_active: new Date().toISOString()
         })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
+      
+      if (updateError) {
+        console.error('Error updating user stats:', updateError);
+        return;
+      }
+
+      if (!data?.length) {
+        console.error('Stats update failed - no data returned');
+        return;
+      }
+
+      console.log(`Successfully incremented ${stat} for user ${userId}`, data[0]);
+      return data[0];
     } catch (error) {
       console.error('Error incrementing user stats:', error);
     }

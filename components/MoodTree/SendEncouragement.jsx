@@ -38,13 +38,12 @@ const isEncouragingMessage = (message) => {
   return ENCOURAGING_WORDS.some(word => lowerMessage.includes(word.toLowerCase()));
 };
 
-const SendEncouragement = ({ onSubmit, onClose, isCommunityGarden = false }) => {
+const SendEncouragement = ({ currentUserId, onSubmit, onClose, isCommunityGarden = false }) => {
   const [message, setMessage] = useState('');
   const [author, setAuthor] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('flower');
   const [showWarning, setShowWarning] = useState(false);
 
-  const { user } = useAuth();
 
   const iconOptions = [
     { id: 'butterfly', label: '🦋 Butterfly', icon: '/assets/icons/butterfly.svg' },
@@ -73,7 +72,7 @@ const SendEncouragement = ({ onSubmit, onClose, isCommunityGarden = false }) => 
       author: author.trim() || 'Anonymous Friend',
       type: selectedIcon,
       isEncouraging: isEncouraging,
-      sender_id: user.id
+      sender_id: currentUserId
     });
   };
 

@@ -26,7 +26,7 @@ const stageNames = {
 const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRetakeQuiz }) => {
   // --- State ---
   const [lastEmotionLog, setLastEmotionLog] = useState(null);
-
+  
   // UI state for modals
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showComment, setShowComment] = useState(false);
