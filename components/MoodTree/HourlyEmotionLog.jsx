@@ -5,7 +5,7 @@ import { emotionLabels, descriptions, impacts } from '../../constants/emotionLog
 
 const HourlyEmotionLog = ({ onSubmit, onClose }) => {
   const [step, setStep] = useState(1);
-  const [emotionValue, setEmotionValue] = useState(4);
+  const [emotionValue, setEmotionValue] = useState(50);
   const [selectedDescriptions, setSelectedDescriptions] = useState([]);
   const [selectedImpacts, setSelectedImpacts] = useState([]);
   const [context, setContext] = useState('');
@@ -13,13 +13,15 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
   const [showAllImpacts, setShowAllImpacts] = useState(false);
 
   const getCurrentEmotionLabel = () => {
-    return emotionLabels.find(e => e.value === emotionValue);
+    const normalized = emotionValue / 100; // 0 to 1
+    const index = Math.min(Math.floor(normalized * emotionLabels.length), emotionLabels.length - 1);
+    return emotionLabels[index];
   };
 
   const getAvailableDescriptions = () => {
-    if (emotionValue <= 3) return descriptions.low;
-    if (emotionValue <= 5) return descriptions.medium;
-    return descriptions.high;
+    if (emotionValue < 43) return descriptions.low;      // 0-42
+    if (emotionValue < 72) return descriptions.medium;   // 43-71
+    return descriptions.high;                             // 72-100
   };
 
   const getDisplayedDescriptions = () => {
@@ -63,7 +65,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
 
   const calculateScore = () => {
     let score = 0;
-    score += emotionValue;
+    score += (emotionValue / 100) * 7;
     if (selectedDescriptions.length > 0) {
       score += Math.min(selectedDescriptions.length * 0.5, 2);
     }
@@ -83,8 +85,10 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
     const calculatedScore = calculateScore();
     
     onSubmit({
-      emotion_level: emotionValue,
-      descriptions: selectedDescriptions,
+      emotion_level: Math.round((emotionValue / 100) * 7),
+      emotion_value_raw: emotionValue,
+      descriptions:
+       selectedDescriptions,
       impacts: selectedImpacts,
       context: context.trim(),
       score: calculatedScore
@@ -104,7 +108,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }} onClick={onClose}>
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Progress Indicator */}
         <div className="flex gap-1 p-4 pb-0 flex-shrink-0">
           {[1, 2, 3, 4].map(i => (
@@ -117,7 +121,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
           ))}
         </div>
 
-        <div className="p-6 pt-4 flex-1 overflow-y-auto flex flex-col">
+        <div className="p-6 pt-4 flex-1 overflow-y-auto flex flex-col min-h-0">
           {/* Step 1: Emotion Slider */}
           {step === 1 && (
             <div className="flex flex-col h-full">
@@ -138,8 +142,8 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                   <div className="relative">
                     <input
                       type="range"
-                      min="1"
-                      max="7"
+                      min="0"
+                      max="100"
                       value={emotionValue}
                       onChange={(e) => setEmotionValue(Number(e.target.value))}
                       className="w-full h-3 rounded-full appearance-none cursor-pointer"
@@ -201,7 +205,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">What best describes it?</h2>
               <p className="text-xs sm:text-sm text-gray-500 mb-4">Select all that apply <span className="text-blue-500">+0.5 pts each</span></p>
 
-              <div className="flex-1 overflow-y-auto -mx-2 px-2">
+              <div className="flex-1 overflow-y-auto -mx-2 px-2 min-h-0">
                 <div className="grid grid-cols-2 gap-2">
                   {getDisplayedDescriptions().map(desc => (
                     <button
@@ -240,7 +244,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">What's impacting you most?</h2>
               <p className="text-xs sm:text-sm text-gray-500 mb-4">Select up to 3 factors <span className="text-green-500">+0.67 pts each</span></p>
 
-              <div className="flex-1 overflow-y-auto -mx-2 px-2">
+              <div className="flex-1 overflow-y-auto -mx-2 px-2 min-h-0">
                 <div className="grid grid-cols-2 gap-2">
                   {getDisplayedImpacts().map(impact => (
                     <button

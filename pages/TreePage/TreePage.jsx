@@ -173,6 +173,7 @@ const TreePage = () => {
   }
 
   return (
+    <div className='page-with-header'>
     <div className="tree-page">
       <MoodTree 
         treeId={currentTreeId}
@@ -182,6 +183,7 @@ const TreePage = () => {
         onTreeUpdate={setCurrentTree}
         onRetakeQuiz={handleRetakeQuiz}
       />
+    </div>
     </div>
   );
 };

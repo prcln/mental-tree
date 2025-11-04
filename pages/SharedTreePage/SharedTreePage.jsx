@@ -86,6 +86,7 @@ const SharedTreePage = () => {
   const displayName = ownerProfile?.display_name || ownerProfile?.username || 'Someone';
 
   return (
+    <div className='page-with-header'>
     <div className="shared-tree-page">
       <div className="shared-header">
         <button className="home-btn" onClick={() => navigate('/')}>
@@ -137,6 +138,7 @@ const SharedTreePage = () => {
         treeData={tree}
         onTreeUpdate={setTree}
       />
+    </div>
     </div>
   );
 };

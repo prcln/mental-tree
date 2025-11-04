@@ -63,3 +63,38 @@
     height: 35px;
   }
 }
+
+/* Apply to main content area */
+.page-with-header {
+  padding-top: var(--header-height);
+  min-height: calc(100vh - var(--header-height));
+}
+
+/* Prevent header overlapping */
+:root {
+  --header-height: 75px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --header-height: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 90px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --header-height: 85px;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --header-height: 80px;
+  }
+}
