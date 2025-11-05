@@ -20,12 +20,20 @@ const MessageModal = ({ message, icon, index, currentUserId, onClose, onUpdate }
   }, [message.id]);
 
   const loadReplies = async () => {
+    if (!message.id) {
+      console.warn('Cannot load replies - message ID is missing');
+      return;
+    }
+
     setIsLoadingReplies(true);
     try {
+      console.log('Loading replies for message:', message.id);
       const repliesData = await messageInteractionService.getMessageReplies(message.id);
+      console.log('Replies loaded:', repliesData);
       setReplies(repliesData);
     } catch (error) {
       console.error('Error loading replies:', error);
+      // Show user-friendly error but don't crash
       setReplies([]);
     } finally {
       setIsLoadingReplies(false);
@@ -53,18 +61,32 @@ const MessageModal = ({ message, icon, index, currentUserId, onClose, onUpdate }
       return;
     }
 
+    console.log('Like attempt:', {
+      messageId: message.id,
+      messageSenderId: message.sender_id,
+      currentUserId: currentUserId,
+      isSameUser: message.sender_id === currentUserId
+    });
+
     // Optimistic update
     const previousLiked = hasLiked;
     const previousLikes = localLikes;
     
-    setHasLiked(!hasLiked);
-    setLocalLikes(hasLiked ? localLikes - 1 : localLikes + 1);
+    const newHasLiked = !hasLiked;
+    const newLikes = newHasLiked 
+      ? localLikes + 1 
+      : Math.max(0, localLikes - 1); // Never go below 0
+    
+    setHasLiked(newHasLiked);
+    setLocalLikes(newLikes);
 
     try {
       const result = await messageInteractionService.toggleMessageLike(message.id, currentUserId);
+      console.log('Like result:', result);
+      
       // Update with actual values from server
       setHasLiked(result.liked);
-      setLocalLikes(result.likes);
+      setLocalLikes(Math.max(0, result.likes)); // Ensure server value is also never negative
       
       // Update parent component with new likes count
       if (onUpdate) {
@@ -75,7 +97,7 @@ const MessageModal = ({ message, icon, index, currentUserId, onClose, onUpdate }
       // Revert optimistic update on error
       setHasLiked(previousLiked);
       setLocalLikes(previousLikes);
-      alert('Failed to update like. Please try again.');
+      alert(error.message || 'Failed to update like. Please try again.');
     }
   };
 
@@ -174,7 +196,7 @@ const MessageModal = ({ message, icon, index, currentUserId, onClose, onUpdate }
 
   return (
     <div 
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fadeIn"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fadeIn"
       onClick={handleBackdropClick}
     >
       <div 

@@ -30,12 +30,15 @@ export const messageInteractionService = {
         if (deleteError) throw deleteError;
 
         // Decrement likes count using RPC
-        const { data: message, error: updateError } = await supabase
+        const { data: newLikesCount, error: updateError } = await supabase
           .rpc('decrement_message_likes', { message_id: messageId });
 
         if (updateError) throw updateError;
 
-        return { liked: false, likes: message };
+        // Ensure likes never go below 0
+        const safeLikesCount = Math.max(0, newLikesCount || 0);
+
+        return { liked: false, likes: safeLikesCount };
       } else {
         // Like: Add the like
         const { error: insertError } = await supabase
@@ -45,12 +48,15 @@ export const messageInteractionService = {
         if (insertError) throw insertError;
 
         // Increment likes count using RPC
-        const { data: message, error: updateError } = await supabase
+        const { data: newLikesCount, error: updateError } = await supabase
           .rpc('increment_message_likes', { message_id: messageId });
 
         if (updateError) throw updateError;
 
-        return { liked: true, likes: message };
+        // Ensure likes is a valid number
+        const safeLikesCount = Math.max(0, newLikesCount || 0);
+
+        return { liked: true, likes: safeLikesCount };
       }
     } catch (error) {
       console.error('Error toggling message like:', error);

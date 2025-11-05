@@ -195,3 +195,149 @@
     padding: 20px;
   }
 }
+
+/* Add these styles to your existing MoodTree.css */
+
+/* Fruit spawn button */
+.btn-fruit-spawn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  border: 2px solid #ff8787;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-fruit-spawn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252 0%, #e53e5a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.btn-fruit-spawn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Fruit notifications */
+.fruit-notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 2.7s;
+  z-index: 1000;
+}
+
+.spawn-notification {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2c3e50;
+  border-left: 4px solid #48c9b0;
+}
+
+.collect-notification {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  color: #2c3e50;
+  border-left: 4px solid #f39c12;
+}
+
+/* Inventory button */
+.btn-inventory {
+  position: fixed;
+  bottom: 7rem;
+  right: 2rem;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  padding: 1rem 1.5rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.btn-inventory:hover {
+  background: linear-gradient(135deg, #55c459, #51be57);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(108, 92, 231, 0.4);
+}
+
+.btn-inventory:active {
+  transform: translateY(0);
+}
+
+/* Tree stats update */
+.tree-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tree-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tree-stats .stat svg {
+  color: #10b981;
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .fruit-notification {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .btn-inventory {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .tree-stats {
+    gap: 0.75rem;
+  }
+
+  .tree-stats .stat {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}

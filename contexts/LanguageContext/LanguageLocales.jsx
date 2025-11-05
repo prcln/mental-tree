@@ -3,10 +3,20 @@ export const translations = {
 
     // Header
     'header.project': 'Emotion Tree Project.',
-    'footer.about': 'About',
-    'footer.tos': 'Terms of Service',
-    'footer.privacy': 'Privacy Policy',
-
+    'header.welcome': 'Welcome',
+    'header.welcomeGuest': 'Welcome to MoodTree!',
+    'header.viewing': 'Viewing',
+    'header.tree': "'s Tree",
+    'header.treesGrown': 'trees grown',
+    'header.encouragementsReceived': 'encouragements received',
+    'header.signIn': 'Sign In',
+    'header.signUp': 'Create Your Tree',
+    'header.getStarted': 'Get Started',
+    'header.myTree': 'My Tree',
+    'header.garden': 'Garden',
+    'header.emotionReport': 'Emotion Report',
+    'header.signOut': 'Sign Out',
+    
     // Footer
     'footer.project': 'Emotion Tree Project.',
     'footer.about': 'About',
@@ -45,10 +55,15 @@ export const translations = {
     'tree.loadingTree': 'Loading your tree...',
     'tree.growthPoints': 'growth points',
     'tree.messages': 'messages',
+    'tree.fruits': 'fruits',
     'tree.dailyCheckIn': 'Daily Check-in',
     'tree.shareTree': 'Share Tree',
     'tree.renewSeed': 'Renew Seed',
     'tree.sendEncouragement': 'Send Encouragement',
+    'tree.logEmotion': 'Log your emotion!',
+    'tree.spawnFruits': '🧪 Spawn Fruits',
+    'tree.spawning': 'Spawning...',
+    'tree.inventory': '🎒 Inventory',
     
     // Tree Stages
     'stage.seed': 'Seed of Hope',
@@ -117,11 +132,13 @@ export const translations = {
     'retake.wait': '🕐 Please wait',
     
     // Shared Tree
+    'shared.someone': 'Someone',
+    'shared.s': '\'s',
     'shared.tree': 'Tree',
     'shared.myTree': 'My Tree',
     'shared.sendMessage': 'Send an encouraging message to help their tree grow!',
     'shared.yourTree': '✨ This is your tree! Share this link with friends to receive encouragement.',
-    'shared.cannotSend': '⚠️ You cannot send messages to your own tree',
+    'shared.cannotSend': 'You cannot send messages to your own tree',
     'shared.loading': 'Loading tree...',
     'shared.oops': '😔 Oops!',
     'shared.goToTree': 'Go to Your Tree',
@@ -134,7 +151,6 @@ export const translations = {
     'common.close': 'Close',
 
     // Report
-    // English (en):
     'reports.sun': 'Su',
     'reports.mon': 'Mo',
     'reports.tue': 'Tu',
@@ -169,9 +185,48 @@ export const translations = {
     'reports.times': 'times',
     'reports.noDataThisMonth': 'No data for this month',
     'reports.checkInRegularly': 'Check in regularly to see your monthly insights',
+
+    // Collection
+    'collection.myCollection': 'My Collection',
+    'collection.fruits': 'Fruits',
+    'collection.exchange': 'Exchange',
+    'collection.noFruits': 'No fruits collected yet!',
+    'collection.visitTrees': 'Visit trees to collect fruits',
+    'collection.collectibles': 'My Collectibles',
+    'collection.noCollectibles': 'No collectibles yet!',
+    'collection.exchangeMore': 'Exchange fruits to unlock collectibles',
+    'collection.exchange.btn': 'Exchange',
+    'collection.notEnough': 'Not enough fruits',
+
+    // Fruit Display
+    'fruitdisplay.collected': 'Collected',
+    'fruitdisplay.collectFail': 'Failed to collect fruit. Please try again.',
+    'fruitdisplay.signIn': 'Please sign in to collect fruits',
   },
   
   vi: {
+    // Header
+    'header.project': 'Dự án Cây Cảm Xúc.',
+    'header.welcome': 'Chào mừng',
+    'header.welcomeGuest': 'Chào mừng đến MoodTree!',
+    'header.viewing': 'Đang xem',
+    'header.tree': '',
+    'header.treesGrown': 'cây đã trồng',
+    'header.encouragementsReceived': 'lời động viên nhận được',
+    'header.signIn': 'Đăng nhập',
+    'header.signUp': 'Tạo cây của bạn',
+    'header.getStarted': 'Bắt đầu',
+    'header.myTree': 'Cây của tôi',
+    'header.garden': 'Vườn',
+    'header.emotionReport': 'Báo cáo cảm xúc',
+    'header.signOut': 'Đăng xuất',
+    
+    // Footer
+    'footer.project': 'Dự án Cây Cảm Xúc.',
+    'footer.about': 'Về chúng tôi',
+    'footer.tos': 'Điều khoản dịch vụ',
+    'footer.privacy': 'Chính sách bảo mật',
+    
     // Auth
     'auth.title': 'Cây Tâm Trạng',
     'auth.subtitle': 'Phát triển hành trình chăm sóc cảm xúc',
@@ -186,6 +241,17 @@ export const translations = {
     'auth.loading': 'Đang tải...',
     'auth.minChars': 'Tối thiểu 6 ký tự',
     
+    // auth.error
+    'auth.error.unfilled': 'Vui lòng điền đầy đủ thông tin',
+    'auth.error.confirmPassword': 'Vui lòng điền đầy đủ thông tin',
+    'auth.error.notMatched': 'Mật khẩu không khớp',
+    'auth.error.minChars': 'Mật khẩu phải có ít nhất 6 ký tự',
+    'auth.error.alreadyReg': 'Email này đã được đăng ký. Vui lòng đăng nhập.',
+    'auth.error.authFailed': 'Xác thực thất bại',
+
+    // auth.success
+    'auth.success.accCreate': 'Tạo tài khoản thành công! Bạn có thể đăng nhập ngay.',
+    
     // Tree Page
     'tree.welcome': 'Chào mừng',
     'tree.treesGrown': 'cây đã trồng',
@@ -193,10 +259,15 @@ export const translations = {
     'tree.loadingTree': 'Đang tải cây của bạn...',
     'tree.growthPoints': 'điểm phát triển',
     'tree.messages': 'tin nhắn',
+    'tree.fruits': 'trái cây',
     'tree.dailyCheckIn': 'Ghi nhận hàng ngày',
     'tree.shareTree': 'Chia sẻ cây',
     'tree.renewSeed': 'Làm mới hạt giống',
     'tree.sendEncouragement': 'Gửi động viên',
+    'tree.logEmotion': 'Ghi nhận cảm xúc!',
+    'tree.spawnFruits': '🧪 Sinh trái cây',
+    'tree.spawning': 'Đang sinh...',
+    'tree.inventory': '🎒 Túi đồ',
     
     // Tree Stages
     'stage.seed': 'Hạt giống hy vọng',
@@ -265,11 +336,13 @@ export const translations = {
     'retake.wait': '🕐 Vui lòng đợi',
     
     // Shared Tree
+    'shared.someone': 'Ai đó',
+    'shared.s': '',
     'shared.tree': 'Cây',
     'shared.myTree': 'Cây của tôi',
     'shared.sendMessage': 'Gửi lời động viên để giúp cây phát triển!',
     'shared.yourTree': '✨ Đây là cây của bạn! Chia sẻ liên kết này với bạn bè để nhận động viên.',
-    'shared.cannotSend': '⚠️ Bạn không thể gửi tin nhắn cho cây của chính mình',
+    'shared.cannotSend': 'Bạn không thể gửi tin nhắn cho cây của chính mình',
     'shared.loading': 'Đang tải cây...',
     'shared.oops': '😔 Ối!',
     'shared.goToTree': 'Đến cây của bạn',
@@ -316,5 +389,22 @@ export const translations = {
     'reports.times': 'lần',
     'reports.noDataThisMonth': 'Không có dữ liệu tháng này',
     'reports.checkInRegularly': 'Ghi nhận thường xuyên để xem thông tin chi tiết hàng tháng',
+
+    // Collection
+    'collection.myCollection': 'Bộ sưu tập của tôi',
+    'collection.fruits': 'Trái cây',
+    'collection.exchange': 'Đổi',
+    'collection.noFruits': 'Chưa có trái cây nào!',
+    'collection.visitTrees': 'Ghé thăm cây để thu thập trái',
+    'collection.collectibles': 'Đồ sưu tập',
+    'collection.noCollectibles': 'Chưa có đồ sưu tập!',
+    'collection.exchangeMore': 'Đổi trái cây để mở khóa đồ sưu tập',
+    'collection.exchange.btn': 'Đổi',
+    'collection.notEnough': 'Không đủ trái cây',
+
+    // Fruit Display
+    'fruitdisplay.collected': 'Đã thu thập',
+    'fruitdisplay.collectFail': 'Không thể thu thập trái cây. Vui lòng thử lại.',
+    'fruitdisplay.signIn': 'Vui lòng đăng nhập để thu thập trái cây',
   }
 };

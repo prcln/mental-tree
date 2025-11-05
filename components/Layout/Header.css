@@ -266,3 +266,22 @@
     font-size: 11px;
   }
 }
+
+.motivational-quote {
+  font-size: 0.9rem;
+  color: #2d5016;
+  font-style: bold;
+  animation: fadeIn 1s ease-in;
+  margin-top: 4px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

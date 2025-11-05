@@ -57,7 +57,7 @@ const SharedTreePage = () => {
       <div className="shared-tree-page">
         <div className="shared-loading">
           <div className="loading-spinner"></div>
-          <p>Loading tree...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -71,11 +71,11 @@ const SharedTreePage = () => {
             <div className="error-icon">
               <Lock size={48} />
             </div>
-            <h2>😔 Oops!</h2>
+            <h2>{t('shared.oops')}</h2>
             <p>{error}</p>
             <button className="home-btn" onClick={() => navigate('/')}>
               <Home size={18} />
-              Go to Your Tree
+              {t('shared.goToTree')}
             </button>
           </div>
         </div>
@@ -85,7 +85,7 @@ const SharedTreePage = () => {
 
   // Check if current user is the owner
   const isOwner = user?.id === tree.user_id;
-  const displayName = ownerProfile?.display_name || ownerProfile?.username || 'Someone';
+  const displayName = ownerProfile?.display_name || ownerProfile?.username || t('shared.someone');
 
   return (
     <div className='page-with-header'>
@@ -93,49 +93,34 @@ const SharedTreePage = () => {
       <div className="shared-header">
         <button className="home-btn" onClick={() => navigate('/')}>
           <Home size={18} />
-          My Tree
+          {t('shared.myTree')}
         </button>
       </div>
 
       <div className="shared-banner">
         <div className="banner-content">
-          <h1>🌳 {displayName}'s {tree.tree_type ? tree.tree_type.charAt(0).toUpperCase() + tree.tree_type.slice(1) : ''} Tree</h1>
+          <h1>🌳 {displayName}{t('shared.s')} {tree.tree_type ? tree.tree_type.charAt(0).toUpperCase() + tree.tree_type.slice(1) : ''} {t('shared.tree')}</h1>
           {!isOwner && (
-            <p className="banner-subtitle">Send an encouraging message to help their tree grow!</p>
+            <p className="banner-subtitle">{t('shared.sendMessage')}</p>
           )}
           {isOwner && (
             <p className="banner-subtitle owner-notice">
-              ✨ This is your tree! Share this link with friends to receive encouragement.
+            {t('shared.yourTree')}  
             </p>
           )}
         </div>
-
-        {ownerProfile && (
-          <div className="owner-stats">
-            <div className="stat-badge">
-              <span className="stat-emoji">🌳</span>
-              <span className="stat-value">{ownerProfile.total_trees_grown}</span>
-              <span className="stat-label">Trees Grown</span>
-            </div>
-            <div className="stat-badge">
-              <span className="stat-emoji">💬</span>
-              <span className="stat-value">{ownerProfile.total_comments_received}</span>
-              <span className="stat-label">Encouragements</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {isOwner && (
         <div className="owner-warning">
           <span className="warning-icon">⚠️</span>
-          <span>You cannot send messages to your own tree</span>
+          <span>{t('shared.cannotSend')}</span>
         </div>
       )}
 
       <MoodTree 
         treeId={treeId}
-        userId={user?.id}
+        currentUserId={user?.id}
         isOwner={isOwner}
         treeData={tree}
         onTreeUpdate={setTree}

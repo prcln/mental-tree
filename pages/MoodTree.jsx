@@ -1,5 +1,6 @@
 import React, { memo, useState, useEffect, useCallback, useRef } from 'react';
-import { Droplets, MessageCircle, Star, Share2, RotateCcw } from 'lucide-react';
+import { Droplets, MessageCircle, Star, Share2, RotateCcw, Apple } from 'lucide-react';
+import FruitInventory from '../components/Fruit/FruitInventory.jsx';
 import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
 import HourlyEmotionLog from '../components/MoodTree/HourlyEmotionLog.jsx';
 import SendEncouragement from '../components/MoodTree/SendEncouragement.jsx';
@@ -12,6 +13,7 @@ import { messageService } from '../services/messageService.js';
 import { cooldownService } from '../services/cooldownService.js';
 import { emotionService } from '../services/emotionService.js';
 import { realtimeService } from '../services/realtimeService.js';
+import { fruitService } from '../services/fruitService.js';
 
 // Constant for stage names
 const stageNames = {
@@ -33,6 +35,8 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
   const [showShare, setShowShare] = useState(false);
   const [showRetakeModal, setShowRetakeModal] = useState(false);
   const [showEncouragement, setShowEncouragement] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
+  const [inventoryKey, setInventoryKey] = useState(0);
 
   // Check-in availability state (now from database)
   const [canCheckIn, setCanCheckIn] = useState(true);
@@ -44,6 +48,12 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
   // Data state for messages (managed internally)
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState(null);
+
+  // Fruit state
+  const [fruits, setFruits] = useState([]);
+  const [isSpawningFruits, setIsSpawningFruits] = useState(false);
+  const [spawnMessage, setSpawnMessage] = useState('');
+  const [collectedFruit, setCollectedFruit] = useState(null);
 
   // Use ref to prevent double-submission
   const isSubmittingRef = useRef(false);
@@ -60,6 +70,17 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
     } catch (err) {
       console.error('Error loading messages:', err);
       setError(err.message);
+    }
+  }, [treeId]);
+
+  // Function to load fruits
+  const loadFruits = useCallback(async () => {
+    if (!treeId) return;
+    try {
+      const data = await fruitService.getTreeFruits(treeId);
+      setFruits(data);
+    } catch (err) {
+      console.error('Error loading fruits:', err);
     }
   }, [treeId]);
 
@@ -120,10 +141,11 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
   }, [isOwner, checkCanCheckIn, checkCanResetTree]);
 
   
-  // Effect to load messages when treeId changes
+  // Effect to load messages and fruits when treeId changes
   useEffect(() => {
     loadMessages();
-  }, [loadMessages]);
+    loadFruits();
+  }, [loadMessages, loadFruits]);
 
   // Real-time subscription
   useEffect(() => {
@@ -218,6 +240,60 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
     }
   }, [onRetakeQuiz]);
 
+  // Fruit spawn handler
+const handleSpawnFruits = useCallback(async () => {
+  if (!treeId || isSpawningFruits) return;
+  
+  setIsSpawningFruits(true);
+  setSpawnMessage('');
+
+  try {
+    const result = await fruitService.spawnFruits(treeId);
+    const spawnCount = typeof result === 'number' ? result : result?.count || 0;
+    
+    if (spawnCount > 0) {
+      setSpawnMessage(`✨ ${spawnCount} fruit(s) spawned!`);
+      
+      // Reload fruits from database to get the new spawned fruits
+      await loadFruits();
+      
+      // Update inventory key to refresh inventory modal
+      setInventoryKey(prev => prev + 1);
+    } else {
+      setSpawnMessage('No fruits spawned. Try again later!');
+    }
+
+    // Clear message after 3 seconds
+    setTimeout(() => setSpawnMessage(''), 3000);
+  } catch (error) {
+    console.error('Error spawning fruits:', error);
+    setSpawnMessage('❌ Failed to spawn fruits');
+    setTimeout(() => setSpawnMessage(''), 3000);
+  } finally {
+    setIsSpawningFruits(false);
+  }
+}, [treeId, isSpawningFruits, loadFruits]);
+  // Fruit collection handler
+  const handleFruitCollect = useCallback(async (result) => {
+    if (result?.fruit_type || result?.success) {
+      const fruitType = result.fruit_type;
+      setCollectedFruit(fruitType);
+      
+      // Immediately update fruits count for instant UI feedback
+      setFruits(prevFruits => prevFruits.filter(f => f.id !== result.fruit_id));
+      
+      // Clear notification after 3 seconds
+      setTimeout(() => setCollectedFruit(null), 3000);
+      
+      // Update inventory key to refresh inventory modal
+      setInventoryKey(prev => prev + 1);
+      
+      // Reload fruits from database to ensure sync
+      await loadFruits();
+    }
+  }, [loadFruits]);
+
+
   // --- Render Logic ---
 
   // Main loading state: We wait for the parent to provide treeData
@@ -251,6 +327,10 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
             <MessageCircle size={20} />
             <span>{messages.length} messages</span>
           </div>
+          <div className="stat">
+            <Apple size={20} />
+            <span>{fruits.length} fruits</span>
+          </div>
         </div>
       </div>
 
@@ -259,12 +339,28 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
         <span>{stageNames[treeData.stage]}</span>
       </div>
 
+      {/* Fruit notifications */}
+      {spawnMessage && (
+        <div className="fruit-notification spawn-notification">
+          {spawnMessage}
+        </div>
+      )}
+
+      {collectedFruit && (
+        <div className="fruit-notification collect-notification">
+          🎉 Collected {collectedFruit}!
+        </div>
+      )}
+
       <TreeVisualization 
         currentStage={treeData.stage || 'seed'}
         messages={messages}
         moodScore={treeData.mood_score}
         treeType={treeData.tree_type || 'oak'}
         currentUserId={currentUserId}
+        treeId={treeId}
+        fruits={fruits}
+        onFruitCollect={handleFruitCollect}
       />
 
       <div className="mood-tree-controls">
@@ -291,6 +387,16 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
             >
               <RotateCcw size={18} />
               Renew Seed
+            </button>
+            {/* DEV: Fruit spawn button */}
+            <button 
+              className="btn btn-fruit-spawn"
+              onClick={handleSpawnFruits}
+              disabled={isSpawningFruits}
+              title="Test fruit spawning"
+            >
+              <Apple size={18} />
+              {isSpawningFruits ? 'Spawning...' : '🧪 Spawn Fruits'}
             </button>
           </>
         )}
@@ -342,6 +448,23 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
           score={lastEmotionLog.score}
           hasContext={!!lastEmotionLog.context}
           onClose={() => setShowEncouragement(false)}
+        />
+      )}
+
+      {/* Inventory button */}
+      <button 
+        className="btn-inventory"
+        onClick={() => setShowInventory(true)}
+      >
+        🎒 Inventory
+      </button>
+
+      {/* Inventory modal */}
+      {showInventory && (
+        <FruitInventory
+        key={inventoryKey}  
+        userId={currentUserId}
+        onClose={() => setShowInventory(false)}
         />
       )}
     </div>

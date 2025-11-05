@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext/AuthContext';
+
+import FruitDisplay from '../../components/Fruit/FruitDisplay';
+import FruitInventory from '../../components/Fruit/FruitInventory';
 import MoodTree from '../MoodTree';
 import PersonalityQuiz from '../../components/Quiz/Quiz';
 import QuizResult from '../../components/Quiz/QuizResult';
@@ -18,6 +21,7 @@ const TreePage = () => {
   const [currentTreeId, setCurrentTreeId] = useState(null);
   const [currentTree, setCurrentTree] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [showInventory, setShowInventory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -134,8 +138,8 @@ const TreePage = () => {
 
   if (loading) {
     return (
-      <div className='tree-page-loading'>
-      <Loading message={t('common.loading')} size="medium" />
+      <div>
+      <Loading message={t('common.loading')} size="full" />
       </div>
     );
   }

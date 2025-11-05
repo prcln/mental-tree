@@ -66,7 +66,8 @@ export const messageService = {
     if (!updatedTrees?.length) throw new Error('Tree update failed');
 
     // Update stats (non-blocking)
-    userService.incrementUserStats(tree.user_id, 'total_comments_received').catch(console.error);
+    // Increment total_encouragement_received for the tree owner
+    userService.incrementUserStats(tree.user_id, 'total_encouragement_received').catch(console.error);
     
     if (messageData.sender_id) {
       userService.incrementUserStats(messageData.sender_id, 'total_comments_given').catch(console.error);
@@ -124,6 +125,12 @@ export const messageService = {
       .single();
 
     if (error) throw error;
+
+    // Update stats for sender (non-blocking)
+    if (messageData.sender_id) {
+      userService.incrementUserStats(messageData.sender_id, 'total_comments_given').catch(console.error);
+    }
+
     return data;
   }
 };
