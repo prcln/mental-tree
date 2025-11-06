@@ -337,7 +337,7 @@ export const translations = {
     
     // Shared Tree
     'shared.someone': 'Ai đó',
-    'shared.s': '',
+    'shared.s': ' ',
     'shared.tree': 'Cây',
     'shared.myTree': 'Cây của tôi',
     'shared.sendMessage': 'Gửi lời động viên để giúp cây phát triển!',

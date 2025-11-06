@@ -7,10 +7,12 @@ import './SharedTreePage.css';
 import { useAuth } from '../../contexts/AuthContext/AuthContext';
 import { treeService } from '../../services/treeService';
 import { userService } from '../../services/userService';
+import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
 const SharedTreePage = () => {
   const { treeId } = useParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [tree, setTree] = useState(null);
   const [ownerProfile, setOwnerProfile] = useState(null);
@@ -99,7 +101,7 @@ const SharedTreePage = () => {
 
       <div className="shared-banner">
         <div className="banner-content">
-          <h1>🌳 {displayName}{t('shared.s')} {tree.tree_type ? tree.tree_type.charAt(0).toUpperCase() + tree.tree_type.slice(1) : ''} {t('shared.tree')}</h1>
+          <h1>🌳 {displayName} {t('shared.s')} {tree.tree_type ? tree.tree_type.charAt(0).toUpperCase() + tree.tree_type.slice(1) : ''} {t('shared.tree')}</h1>
           {!isOwner && (
             <p className="banner-subtitle">{t('shared.sendMessage')}</p>
           )}

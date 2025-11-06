@@ -49,20 +49,20 @@
 }
 
 /* Tree Wrapper */
+/* Tree Wrapper - sits on the ground naturally */
 .tree-wrapper {
   position: absolute;
-  bottom: 8rem;
+  bottom: 10rem; /* Height of the ground */
   left: 50%;
   transform: translateX(-50%);
-  width: 80%;
-  max-width: 800px;
-  height: 70vh;
+  width: 600px;
+  height: 600px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
 }
 
-/* Tree Visual */
+/* Tree Visual - contains everything */
 .tree-visual {
   position: relative;
   width: 100%;
@@ -70,41 +70,51 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  transition: all 1s ease-in-out;
 }
 
 .tree-svg {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
-  transition: all 1s ease-in-out;
+  object-position: bottom center; /* Tree grows from bottom */
+}
+
+/* Messages and fruits are positioned relative to tree-visual */
+.messages-layer,
+.fruits-layer {
+  position: absolute;
+  inset: 0; /* Covers the entire tree-visual area */
+  pointer-events: none;
 }
 
 /* Stage-specific sizing */
 .tree-stage-seed .tree-svg {
+  max-width: 15%;
   max-height: 15%;
 }
 
 .tree-stage-sprout .tree-svg {
-  max-height: 25%;
+  max-width: 30%;
+  max-height: 30%;
 }
 
 .tree-stage-sapling .tree-svg {
-  max-height: 40%;
+  max-width: 50%;
+  max-height: 50%;
 }
 
 .tree-stage-young .tree-svg {
-  max-height: 60%;
+  max-width: 70%;
+  max-height: 70%;
 }
 
 .tree-stage-mature .tree-svg {
-  max-height: 80%;
+  max-width: 85%;
+  max-height: 85%;
 }
 
 .tree-stage-blooming .tree-svg {
+  max-width: 100%;
   max-height: 100%;
 }
 
@@ -129,13 +139,25 @@
   pointer-events: auto;
 }
 
+/* Fruits layer */
+.fruits-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.fruits-layer button {
+  pointer-events: auto;
+}
+
 /* Ground */
 .tree-ground {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 10rem;
+  height: 11.5rem;
   background: linear-gradient(to top, #228B22 0%, #90EE90 100%);
 }
 
@@ -188,6 +210,7 @@
   padding: 0.5rem;
   border-radius: 9999px;
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  z-index: 20;
 }
 
 .pagination-btn {
@@ -265,43 +288,6 @@
   }
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .tree-wrapper {
-    width: 90%;
-  }
-
-  .tree-stage-info {
-    top: 1rem;
-    left: 1rem;
-    padding: 0.5rem 0.75rem;
-  }
-
-  .pagination-controls {
-    bottom: 3rem;
-  }
-
-  .tree-sun {
-    right: 2rem;
-  }
-}
-
-/* Fruits layer */
-.fruits-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 15;
-}
-
-.fruits-layer button {
-  pointer-events: auto;
-}
-
-/* Fruit animations */
 @keyframes sway {
   0%, 100% {
     transform: translate(-50%, -50%) rotate(-5deg);
@@ -328,5 +314,73 @@
   100% {
     opacity: 0;
     transform: translate(-50%, -150%) scale(1.5);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .tree-wrapper {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tree-wrapper {
+    width: 90%;
+    max-width: 400px;
+  }
+
+  .tree-stage-info {
+    top: 1rem;
+    left: 1rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .stage-name {
+    font-size: 1rem;
+  }
+
+  .pagination-controls {
+    bottom: 2rem;
+    padding: 0.375rem;
+    gap: 0.5rem;
+  }
+
+  .page-number {
+    font-size: 0.75rem;
+  }
+
+  .message-range {
+    font-size: 0.625rem;
+  }
+
+  .tree-sun {
+    right: 2rem;
+  }
+
+  .fruits-layer button {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tree-wrapper {
+    max-width: 320px;
+  }
+
+  .tree-stage-info {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .stage-label {
+    font-size: 0.75rem;
+  }
+
+  .stage-name {
+    font-size: 0.875rem;
+  }
+
+  .stage-levelup {
+    font-size: 0.625rem;
   }
 }

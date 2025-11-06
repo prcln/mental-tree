@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect, useCallback, useRef } from 'react';
-import { Droplets, MessageCircle, Star, Share2, RotateCcw, Apple } from 'lucide-react';
+import { Droplets, MessageCircle, Star, Share2, RotateCcw, Apple, Store } from 'lucide-react';
 import FruitInventory from '../components/Fruit/FruitInventory.jsx';
 import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
 import HourlyEmotionLog from '../components/MoodTree/HourlyEmotionLog.jsx';
@@ -7,6 +7,7 @@ import SendEncouragement from '../components/MoodTree/SendEncouragement.jsx';
 import TreeShare from '../components/MoodTree/TreeShare.jsx';
 import RetakeQuizModal from '../components/Modal/QuizRetakeWarn/QuizRetakeWarning.jsx';
 import MoodEncouragement from '../components/Modal/MoodEncouragementModal/MoodEncouragementModal.jsx';
+import FruitTrade from '../components/Fruit/FruitTrade.jsx';
 
 import './MoodTree.css';
 import { messageService } from '../services/messageService.js';
@@ -31,6 +32,7 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
   
   // UI state for modals
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showTrade, setShowTrade] = useState(false);
   const [showComment, setShowComment] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showRetakeModal, setShowRetakeModal] = useState(false);
@@ -315,25 +317,28 @@ const handleSpawnFruits = useCallback(async () => {
   return (
     <div className="mood-tree-container">
       <div className="mood-tree-header">
-        <h1>
-          ✨  {treeData.tree_type ? treeData.tree_type.charAt(0).toUpperCase() + treeData.tree_type.slice(1) : ''} Tree ✨
-        </h1>
-        <div className="tree-stats">
-          <div className="stat">
-            <Droplets size={20} />
-            <span>{treeData.mood_score} growth points</span>
-          </div>
-          <div className="stat">
-            <MessageCircle size={20} />
-            <span>{messages.length} messages</span>
-          </div>
-          <div className="stat">
-            <Apple size={20} />
-            <span>{fruits.length} fruits</span>
-          </div>
+      <h1>
+        ✨  {treeData.tree_type ? treeData.tree_type.charAt(0).toUpperCase() + treeData.tree_type.slice(1) : ''} Tree ✨
+      </h1>
+      <div className="tree-stats">
+        <div className="stat">
+          <Droplets size={18} />
+          <span>{treeData.mood_score}</span>
+        </div>
+        <div className="stat">
+          <MessageCircle size={18} />
+          <span>{messages.length}</span>
+        </div>
+        <div className="stat">
+          <Apple size={18} />
+          <span>{fruits.length}</span>
+        </div>
+        <div className="stat stage-stat">
+          <Star size={16} />
+          <span>{stageNames[treeData.stage]}</span>
         </div>
       </div>
-
+      </div>
       <div className="stage-label-header">
         <Star size={16} />
         <span>{stageNames[treeData.stage]}</span>
@@ -451,13 +456,23 @@ const handleSpawnFruits = useCallback(async () => {
         />
       )}
 
-      {/* Inventory button */}
-      <button 
-        className="btn-inventory"
-        onClick={() => setShowInventory(true)}
-      >
-        🎒 Inventory
-      </button>
+      {/* Quick access buttons */}
+<div className="quick-access-buttons">
+  <button 
+    className="btn-quick-access"
+    onClick={() => setShowInventory(true)}
+    title="Inventory"
+  >
+    🎒
+  </button>
+  <button 
+    className="btn-quick-access"
+    onClick={() => setShowTrade(true)}
+    title="Trade Market"
+  >
+    <Store size={20} />
+  </button>
+</div>
 
       {/* Inventory modal */}
       {showInventory && (
@@ -467,6 +482,18 @@ const handleSpawnFruits = useCallback(async () => {
         onClose={() => setShowInventory(false)}
         />
       )}
+
+      {/* Trade modal */}
+{showTrade && (
+  <FruitTrade
+    userId={currentUserId}
+    onClose={() => setShowTrade(false)}
+    onTradeComplete={() => {
+      setInventoryKey(prev => prev + 1);
+      loadFruits();
+    }}
+  />
+)}
     </div>
   );
 };

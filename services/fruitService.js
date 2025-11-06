@@ -3,8 +3,25 @@ import { supabase } from "../supabase/client";
 export const fruitService = {
   /**
    * Get all fruits for a tree
+   * If userId provided, verify ownership. Otherwise return empty for non-owners.
    */
-  getTreeFruits: async (treeId) => {
+  getTreeFruits: async (treeId, userId = null) => {
+    // If userId provided, verify ownership
+    if (userId) {
+      const { data: tree, error: treeError } = await supabase
+        .from('trees')
+        .select('user_id')
+        .eq('id', treeId)
+        .single();
+
+      if (treeError) throw treeError;
+      
+      // Only owner can see their fruits
+      if (tree.user_id !== userId) {
+        return [];
+      }
+    }
+
     const { data, error } = await supabase
       .from('tree_fruits')
       .select('*')
@@ -24,13 +41,30 @@ export const fruitService = {
       .rpc('spawn_tree_fruits', { p_tree_id: treeId });
 
     if (error) throw error;
-    return data; // Returns count of spawned fruits
+    return data;
   },
 
   /**
-   * Collect a fruit
+   * Collect a fruit (owner only)
    */
   collectFruit: async (fruitId, userId) => {
+    // Verify ownership before collecting
+    const { data: fruit, error: fruitError } = await supabase
+      .from('tree_fruits')
+      .select(`
+        *,
+        tree:trees(user_id)
+      `)
+      .eq('id', fruitId)
+      .single();
+
+    if (fruitError) throw fruitError;
+
+    // Check if user owns the tree
+    if (fruit.tree.user_id !== userId) {
+      throw new Error('You can only collect fruits from your own trees');
+    }
+
     const { data, error } = await supabase
       .rpc('collect_fruit', { 
         p_fruit_id: fruitId, 
@@ -92,7 +126,6 @@ export const fruitService = {
    */
   exchangeForCollectible: async (userId, collectibleId) => {
     try {
-      // Get collectible details
       const { data: collectible, error: collectibleError } = await supabase
         .from('collectibles')
         .select('*')
@@ -101,7 +134,6 @@ export const fruitService = {
 
       if (collectibleError) throw collectibleError;
 
-      // Get user inventory
       const { data: inventory, error: inventoryError } = await supabase
         .from('user_inventory')
         .select('*')
@@ -110,7 +142,6 @@ export const fruitService = {
 
       if (inventoryError) throw inventoryError;
 
-      // Check if user has enough fruits
       const exchangeCost = collectible.exchange_cost;
       const userFruits = {};
       inventory.forEach(item => {
@@ -123,7 +154,6 @@ export const fruitService = {
         }
       }
 
-      // Deduct fruits from inventory
       for (const [fruitType, required] of Object.entries(exchangeCost)) {
         const { error: deductError } = await supabase
           .from('user_inventory')
@@ -137,7 +167,6 @@ export const fruitService = {
         if (deductError) throw deductError;
       }
 
-      // Add collectible to user's collection
       const { data: newCollectible, error: addError } = await supabase
         .from('user_collectibles')
         .insert({
@@ -152,7 +181,6 @@ export const fruitService = {
         .single();
 
       if (addError) {
-        // If already owned, increment quantity
         if (addError.code === '23505') {
           const { data: updated, error: updateError } = await supabase
             .from('user_collectibles')
@@ -181,11 +209,157 @@ export const fruitService = {
   },
 
   /**
+   * Create a trade offer
+   */
+  createTradeOffer: async (userId, offeredFruits, requestedFruits) => {
+    try {
+      // Verify user has the fruits they're offering
+      const { data: inventory, error: inventoryError } = await supabase
+        .from('user_inventory')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('item_type', 'fruit');
+
+      if (inventoryError) throw inventoryError;
+
+      const userFruits = {};
+      inventory.forEach(item => {
+        userFruits[item.item_name] = item.quantity;
+      });
+
+      for (const [fruitType, quantity] of Object.entries(offeredFruits)) {
+        if ((userFruits[fruitType] || 0) < quantity) {
+          throw new Error(`Not enough ${fruitType}s to offer`);
+        }
+      }
+
+      // Create trade offer
+      const { data, error } = await supabase
+        .from('trade_offers')
+        .insert({
+          user_id: userId,
+          offered_fruits: offeredFruits,
+          requested_fruits: requestedFruits,
+          status: 'open'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating trade offer:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get all open trade offers (excluding user's own offers)
+   */
+  getTradeOffers: async (userId) => {
+    const { data, error } = await supabase
+      .from('trade_offers')
+      .select(`
+        *,
+        user:user_profiles!trade_offers_user_id_fkey(username, user_id)
+      `)
+      .eq('status', 'open')
+      .neq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  /**
+   * Get user's own trade offers
+   */
+  getUserTradeOffers: async (userId) => {
+    const { data, error } = await supabase
+      .from('trade_offers')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  /**
+   * Accept a trade offer
+   */
+  acceptTradeOffer: async (tradeId, acceptingUserId) => {
+    try {
+      // Get trade offer details
+      const { data: trade, error: tradeError } = await supabase
+        .from('trade_offers')
+        .select('*')
+        .eq('id', tradeId)
+        .single();
+
+      if (tradeError) throw tradeError;
+
+      if (trade.status !== 'open') {
+        throw new Error('Trade offer is no longer available');
+      }
+
+      // Verify accepting user has the requested fruits
+      const { data: inventory, error: inventoryError } = await supabase
+        .from('user_inventory')
+        .select('*')
+        .eq('user_id', acceptingUserId)
+        .eq('item_type', 'fruit');
+
+      if (inventoryError) throw inventoryError;
+
+      const userFruits = {};
+      inventory.forEach(item => {
+        userFruits[item.item_name] = item.quantity;
+      });
+
+      for (const [fruitType, quantity] of Object.entries(trade.requested_fruits)) {
+        if ((userFruits[fruitType] || 0) < quantity) {
+          throw new Error(`Not enough ${fruitType}s to complete trade`);
+        }
+      }
+
+      // Execute trade using RPC function for atomicity
+      const { data, error } = await supabase
+        .rpc('execute_trade', {
+          p_trade_id: tradeId,
+          p_accepting_user_id: acceptingUserId
+        });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error accepting trade:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Cancel a trade offer
+   */
+  cancelTradeOffer: async (tradeId, userId) => {
+    const { data, error } = await supabase
+      .from('trade_offers')
+      .update({ status: 'cancelled' })
+      .eq('id', tradeId)
+      .eq('user_id', userId)
+      .eq('status', 'open')
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  /**
    * Check if tree should spawn fruits
    */
   shouldSpawnFruits: async (treeId) => {
     try {
-      // Get tree info
       const { data: tree, error: treeError } = await supabase
         .from('trees')
         .select('stage, updated_at')
@@ -194,7 +368,6 @@ export const fruitService = {
 
       if (treeError) throw treeError;
 
-      // Get spawn settings for tree stage
       const { data: settings, error: settingsError } = await supabase
         .from('fruit_spawn_settings')
         .select('spawn_interval_hours, max_fruits_per_tree')
@@ -203,12 +376,10 @@ export const fruitService = {
 
       if (settingsError) throw settingsError;
 
-      // If spawn interval is 0, don't spawn (e.g., seed stage)
       if (settings.spawn_interval_hours === 0) {
         return false;
       }
 
-      // Check current fruit count
       const { data: currentFruits, error: countError } = await supabase
         .from('tree_fruits')
         .select('id', { count: 'exact' })
@@ -219,28 +390,24 @@ export const fruitService = {
 
       const currentFruitCount = currentFruits?.length || 0;
 
-      // Don't spawn if already at max
       if (currentFruitCount >= settings.max_fruits_per_tree) {
         return false;
       }
 
-      // Check last spawn time - use maybeSingle() instead of single()
       const { data: lastFruits, error: lastFruitError } = await supabase
         .from('tree_fruits')
         .select('spawned_at')
         .eq('tree_id', treeId)
         .order('spawned_at', { ascending: false })
         .limit(1)
-        .maybeSingle(); // Use maybeSingle() to handle no results
+        .maybeSingle();
 
       if (lastFruitError) throw lastFruitError;
 
-      // If no fruits spawned yet, should spawn
       if (!lastFruits) {
         return true;
       }
 
-      // Check if enough time has passed
       const hoursSinceSpawn = (Date.now() - new Date(lastFruits.spawned_at).getTime()) / (1000 * 60 * 60);
       return hoursSinceSpawn >= settings.spawn_interval_hours;
 

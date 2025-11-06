@@ -3,24 +3,25 @@ import { Sun, Cloud, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import MessageDecoration from '../MessageComponents/MessageDecoration';
 import './TreeVisualization.css';
 import { fruitEmojis } from '../../constants/fruits';
-
-import seed from "../../src/assets/trees/seed.svg";
-import sprout from "../../src/assets/trees/sprout.svg";
-import sapling from "../../src/assets/trees/sapling.svg";
-import young from "../../src/assets/trees/young.svg";
-import mature from "../../src/assets/trees/mature.svg";
-import blooming from "../../src/assets/trees/blooming.svg";
 import { pointsUntilNextStage } from '../../services/stageHelper';
 import { fruitService } from '../../services/fruitService';
 
+import seedImg from '../../src/assets/tree_stages/seed.svg';
+import sproutImg from '../../src/assets/tree_stages/sprout.svg';
+import saplingImg from '../../src/assets/tree_stages/sapling.svg';
+import youngImg from '../../src/assets/tree_stages/young.svg';
+import matureImg from '../../src/assets/tree_stages/mature.svg';
+import bloomingImg from '../../src/assets/tree_stages/mature.svg';
+
 const stageImages = {
-  seed,
-  sprout,
-  sapling,
-  young,
-  mature,
-  blooming,
+  seed: seedImg,
+  sprout: sproutImg,
+  sapling: saplingImg,
+  young: youngImg,
+  mature: matureImg,
+  blooming: bloomingImg,
 };
+
 
 // Stage-specific message positions
 const getMessagePositions = (stage) => {
@@ -123,6 +124,7 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
 
   const messagePositions = getMessagePositions(currentStage);
   const fruitPositions = getFruitPositions(currentStage);
+  const StageImage = stageImages[currentStage];
   
   // Calculate messages per page based on available positions
   const messagesPerPage = messagePositions.length || 1;
@@ -232,13 +234,67 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
       <div className="tree-wrapper">
         <div className={`tree-visual tree-stage-${currentStage}`}>
           <img 
-            src={stageImages[currentStage]}
+            src={StageImage}
             alt={`Tree at ${currentStage} stage`}
             className="tree-svg"
           />
           
           {currentStage === 'blooming' && (
             <Sparkles className="bloom-sparkle" size={24} />
+          )}
+
+          {/* Messages overlay - positioned relative to tree */}
+          {currentStage !== 'seed' && currentMessages.length > 0 && (
+            <div className="messages-layer">
+              {currentMessages.map((message, index) => (
+                <MessageDecoration
+                  key={message.id || `${currentPage}-${index}`}
+                  message={message}
+                  position={currentPositions[index]}
+                  index={startIdx + index}
+                  currentUserId={currentUserId}
+                  onUpdate={() => {}}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Fruits overlay - positioned relative to tree */}
+          {fruits.length > 0 && currentStage !== 'seed' && (
+            <div className="fruits-layer">
+              {fruits.slice(0, fruitPositions.length).map((fruit, index) => {
+                const position = fruitPositions[index];
+                return (
+                  <button
+                    key={fruit.id}
+                    onClick={() => handleCollect(fruit.id, fruit.fruit_type)}
+                    disabled={collecting === fruit.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${position.x}%`,
+                      top: `${position.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: collecting === fruit.id ? 'not-allowed' : 'pointer',
+                      fontSize: '2rem',
+                      zIndex: 15,
+                      transition: 'all 0.3s ease',
+                      animationName: collecting === fruit.id ? 'bounce' : 'sway',
+                      animationDuration: collecting === fruit.id ? '0.5s' : '3s',
+                      animationTimingFunction: collecting === fruit.id ? 'ease' : 'ease-in-out',
+                      animationIterationCount: collecting === fruit.id ? '1' : 'infinite',
+                      animationDelay: `${index * 0.2}s`,
+                      filter: collecting === fruit.id ? 'brightness(0.7)' : 'brightness(1)',
+                      pointerEvents: collecting === fruit.id ? 'none' : 'auto'
+                    }}
+                    title={`Collect ${fruit.fruit_type}`}
+                  >
+                    {fruitEmojis[fruit.fruit_type] || '🍎'}
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
@@ -280,60 +336,6 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
           >
             <ChevronRight size={20} />
           </button>
-        </div>
-      )}
-
-      {/* Messages overlay */}
-      {currentStage !== 'seed' && currentMessages.length > 0 && (
-        <div className="messages-layer">
-          {currentMessages.map((message, index) => (
-            <MessageDecoration
-              key={message.id || `${currentPage}-${index}`}
-              message={message}
-              position={currentPositions[index]}
-              index={startIdx + index}
-              currentUserId={currentUserId}
-              onUpdate={() => {}}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Fruits overlay */}
-      {fruits.length > 0 && currentStage !== 'seed' && (
-        <div className="fruits-layer">
-          {fruits.slice(0, fruitPositions.length).map((fruit, index) => {
-            const position = fruitPositions[index];
-            return (
-              <button
-                key={fruit.id}
-                onClick={() => handleCollect(fruit.id, fruit.fruit_type)}
-                disabled={collecting === fruit.id}
-                style={{
-                  position: 'absolute',
-                  left: `${position.x}%`,
-                  top: `${position.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: collecting === fruit.id ? 'not-allowed' : 'pointer',
-                  fontSize: '2rem',
-                  zIndex: 15,
-                  transition: 'all 0.3s ease',
-                  animationName: collecting === fruit.id ? 'bounce' : 'sway',
-                  animationDuration: collecting === fruit.id ? '0.5s' : '3s',
-                  animationTimingFunction: collecting === fruit.id ? 'ease' : 'ease-in-out',
-                  animationIterationCount: collecting === fruit.id ? '1' : 'infinite',
-                  animationDelay: `${index * 0.2}s`,
-                  filter: collecting === fruit.id ? 'brightness(0.7)' : 'brightness(1)',
-                  pointerEvents: collecting === fruit.id ? 'none' : 'auto'
-                }}
-                title={`Collect ${fruit.fruit_type}`}
-              >
-                {fruitEmojis[fruit.fruit_type] || '🍎'}
-              </button>
-            );
-          })}
         </div>
       )}
 
