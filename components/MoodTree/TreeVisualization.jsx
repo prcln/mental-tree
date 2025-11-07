@@ -13,6 +13,7 @@ import saplingImg from '../../src/assets/tree_stages/sapling.svg';
 import youngImg from '../../src/assets/tree_stages/young.svg';
 import matureImg from '../../src/assets/tree_stages/mature.svg';
 import bloomingImg from '../../src/assets/tree_stages/mature.svg';
+import GrassField from "../../src/assets/grassField.svg"
 
 const stageImages = {
   seed: seedImg,
@@ -31,8 +32,6 @@ const getMessagePositions = (stage) => {
 
 // Fruit positions on the tree
 const getFruitPositions = (stage) => {
-
-  
   return positionsFruit[stage] || [];
 };
 
@@ -211,7 +210,7 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
       {/* Ground */}
       <div className="tree-ground">
         <img 
-          src="../../src/assets/grassField.svg"
+          src={GrassField}
           alt={`Tree at ${currentStage} stage`}
           className="grass-svg"
         />
