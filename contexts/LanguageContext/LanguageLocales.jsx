@@ -202,6 +202,95 @@ export const translations = {
     'fruitdisplay.collected': 'Collected',
     'fruitdisplay.collectFail': 'Failed to collect fruit. Please try again.',
     'fruitdisplay.signIn': 'Please sign in to collect fruits',
+
+        // Emotion Labels
+    'emotion.veryUnpleasant': 'Very Unpleasant',
+    'emotion.unpleasant': 'Unpleasant',
+    'emotion.slightlyUnpleasant': 'Slightly Unpleasant',
+    'emotion.neutral': 'Neutral',
+    'emotion.slightlyPleasant': 'Slightly Pleasant',
+    'emotion.pleasant': 'Pleasant',
+    'emotion.veryPleasant': 'Very Pleasant',
+
+    // Descriptions - Low
+    'description.sad': 'Sad',
+    'description.anxious': 'Anxious',
+    'description.stressed': 'Stressed',
+    'description.angry': 'Angry',
+    'description.lonely': 'Lonely',
+    'description.overwhelmed': 'Overwhelmed',
+    'description.frustrated': 'Frustrated',
+    'description.tired': 'Tired',
+
+    // Descriptions - Medium
+    'description.calm': 'Calm',
+    'description.content': 'Content',
+    'description.okay': 'Okay',
+    'description.relaxed': 'Relaxed',
+    'description.peaceful': 'Peaceful',
+    'description.stable': 'Stable',
+    'description.balanced': 'Balanced',
+
+    // Descriptions - High
+    'description.happy': 'Happy',
+    'description.excited': 'Excited',
+    'description.energetic': 'Energetic',
+    'description.grateful': 'Grateful',
+    'description.confident': 'Confident',
+    'description.motivated': 'Motivated',
+    'description.joyful': 'Joyful',
+    'description.loved': 'Loved',
+
+    // Impacts
+    'impact.family': 'Family',
+    'impact.friends': 'Friends',
+    'impact.work': 'Work',
+    'impact.school': 'School',
+    'impact.health': 'Health',
+    'impact.exercise': 'Exercise',
+    'impact.sleep': 'Sleep',
+    'impact.weather': 'Weather',
+    'impact.news': 'News',
+    'impact.socialMedia': 'Social Media',
+    'impact.hobbies': 'Hobbies',
+    'impact.food': 'Food',
+    'impact.money': 'Money',
+    'impact.relationships': 'Relationships',
+    'impact.goals': 'Goals',
+    'impact.nature': 'Nature',
+    'impact.music': 'Music',
+    'impact.other': 'Other',
+
+      // Questions
+    'emotion.question.feeling': 'How are you feeling?',
+    'emotion.question.describe': 'What best describes it?',
+    'emotion.question.impact': "What's impacting you most?",
+    'emotion.question.context': 'Add more context?',
+
+    // Hints
+    'emotion.hint.slider': 'Move the slider to describe your emotion',
+    'emotion.hint.selectAll': 'Select all that apply',
+    'emotion.hint.selectUpTo3': 'Select up to 3 factors',
+    'emotion.hint.optional': 'Optional',
+
+    // Actions
+    'emotion.action.save': 'Save Log',
+    'emotion.bonusPoints': 'bonus pts!',
+    'emotion.scale.unpleasant': 'Unpleasant',
+    'emotion.scale.pleasant': 'Pleasant',
+    'emotion.placeholder.context': "What's on your mind?...",
+
+    // Summary
+    'emotion.summary.title': 'Your log summary:',
+    'emotion.summary.impact': 'Impact',
+    'emotion.summary.score': 'Estimated Score',
+
+    // Common
+    'common.back': 'Back',
+    'common.continue': 'Continue',
+    'common.skip': 'Skip',
+    'common.showMore': 'Show More',
+    'common.showLess': 'Show Less'
   },
   
   vi: {
@@ -406,5 +495,63 @@ export const translations = {
     'fruitdisplay.collected': 'Đã thu thập',
     'fruitdisplay.collectFail': 'Không thể thu thập trái cây. Vui lòng thử lại.',
     'fruitdisplay.signIn': 'Vui lòng đăng nhập để thu thập trái cây',
+
+    // Emotion Labels
+    'emotion.veryUnpleasant': 'Rất khó chịu',
+    'emotion.unpleasant': 'Khó chịu',
+    'emotion.slightlyUnpleasant': 'Hơi khó chịu',
+    'emotion.neutral': 'Trung lập',
+    'emotion.slightlyPleasant': 'Hơi dễ chịu',
+    'emotion.pleasant': 'Dễ chịu',
+    'emotion.veryPleasant': 'Rất dễ chịu',
+
+    // Descriptions - Low
+    'description.sad': 'Buồn',
+    'description.anxious': 'Lo lắng',
+    'description.stressed': 'Căng thẳng',
+    'description.angry': 'Giận dữ',
+    'description.lonely': 'Cô đơn',
+    'description.overwhelmed': 'Quá tải',
+    'description.frustrated': 'Thất vọng',
+    'description.tired': 'Mệt mỏi',
+
+    // Descriptions - Medium
+    'description.calm': 'Bình tĩnh',
+    'description.content': 'Hài lòng',
+    'description.okay': 'Ổn',
+    'description.relaxed': 'Thư giãn',
+    'description.peaceful': 'Yên bình',
+    'description.stable': 'Ổn định',
+    'description.balanced': 'Cân bằng',
+
+    // Descriptions - High
+    'description.happy': 'Vui vẻ',
+    'description.excited': 'Phấn khích',
+    'description.energetic': 'Năng động',
+    'description.grateful': 'Biết ơn',
+    'description.confident': 'Tự tin',
+    'description.motivated': 'Có động lực',
+    'description.joyful': 'Hạnh phúc',
+    'description.loved': 'Được yêu thương',
+
+    // Impacts
+    'impact.family': 'Gia đình',
+    'impact.friends': 'Bạn bè',
+    'impact.work': 'Công việc',
+    'impact.school': 'Trường học',
+    'impact.health': 'Sức khỏe',
+    'impact.exercise': 'Tập thể dục',
+    'impact.sleep': 'Giấc ngủ',
+    'impact.weather': 'Thời tiết',
+    'impact.news': 'Tin tức',
+    'impact.socialMedia': 'Mạng xã hội',
+    'impact.hobbies': 'Sở thích',
+    'impact.food': 'Đồ ăn',
+    'impact.money': 'Tiền bạc',
+    'impact.relationships': 'Mối quan hệ',
+    'impact.goals': 'Mục tiêu',
+    'impact.nature': 'Thiên nhiên',
+    'impact.music': 'Âm nhạc',
+    'impact.other': 'Khác',
   }
 };

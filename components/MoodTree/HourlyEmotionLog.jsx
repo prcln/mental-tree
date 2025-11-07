@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
 import { emotionLabels, descriptions, impacts } from '../../constants/emotionLog';
 
 const HourlyEmotionLog = ({ onSubmit, onClose }) => {
+  const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [emotionValue, setEmotionValue] = useState(50);
   const [selectedDescriptions, setSelectedDescriptions] = useState([]);
@@ -13,15 +15,15 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
   const [showAllImpacts, setShowAllImpacts] = useState(false);
 
   const getCurrentEmotionLabel = () => {
-    const normalized = emotionValue / 100; // 0 to 1
+    const normalized = emotionValue / 100;
     const index = Math.min(Math.floor(normalized * emotionLabels.length), emotionLabels.length - 1);
     return emotionLabels[index];
   };
 
   const getAvailableDescriptions = () => {
-    if (emotionValue < 43) return descriptions.low;      // 0-42
-    if (emotionValue < 72) return descriptions.medium;   // 43-71
-    return descriptions.high;                             // 72-100
+    if (emotionValue < 43) return descriptions.low;
+    if (emotionValue < 72) return descriptions.medium;
+    return descriptions.high;
   };
 
   const getDisplayedDescriptions = () => {
@@ -33,24 +35,22 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
     return showAllImpacts ? impacts : impacts.slice(0, 6);
   };
 
-  const toggleDescription = (desc) => {
+  const toggleDescription = (descKey) => {
     setSelectedDescriptions(prev => {
-      // Prevent double-toggle by checking if already processing
-      if (prev.includes(desc)) {
-        return prev.filter(d => d !== desc);
+      if (prev.includes(descKey)) {
+        return prev.filter(d => d !== descKey);
       } else {
-        return [...prev, desc];
+        return [...prev, descKey];
       }
     });
   };
 
-  const toggleImpact = (impact) => {
+  const toggleImpact = (impactKey) => {
     setSelectedImpacts(prev => {
-      // Prevent double-toggle by checking if already processing
-      if (prev.includes(impact)) {
-        return prev.filter(i => i !== impact);
+      if (prev.includes(impactKey)) {
+        return prev.filter(i => i !== impactKey);
       } else {
-        return [...prev, impact];
+        return [...prev, impactKey];
       }
     });
   };
@@ -84,12 +84,13 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
   const handleSubmit = () => {
     const calculatedScore = calculateScore();
     
+    // Save translation KEYS to database, not translated text
     onSubmit({
       emotion_level: Math.round((emotionValue / 100) * 7),
       emotion_value_raw: emotionValue,
-      descriptions:
-       selectedDescriptions,
-      impacts: selectedImpacts,
+      emotion_label_key: getCurrentEmotionLabel().key, // Save the key
+      descriptions: selectedDescriptions, // Array of keys like ['description.happy', 'description.excited']
+      impacts: selectedImpacts, // Array of keys like ['impact.family', 'impact.work']
       context: context.trim(),
       score: calculatedScore
     });
@@ -125,8 +126,12 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
           {/* Step 1: Emotion Slider */}
           {step === 1 && (
             <div className="flex flex-col h-full">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">How are you feeling?</h2>
-              <p className="text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">Move the slider to describe your emotion</p>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+                {t('emotion.question.feeling')}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">
+                {t('emotion.hint.slider')}
+              </p>
 
               <div className="flex-1 flex flex-col items-center justify-center space-y-6 sm:space-y-8">
                 <div className="text-center">
@@ -134,7 +139,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                     {currentLabel.emoji}
                   </div>
                   <div className="text-lg sm:text-xl font-medium text-gray-700 transition-all duration-300">
-                    {currentLabel.label}
+                    {t(currentLabel.key)}
                   </div>
                 </div>
 
@@ -191,8 +196,8 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                     `}</style>
                   </div>
                   <div className="flex justify-between mt-2 text-xs text-gray-500">
-                    <span>Unpleasant</span>
-                    <span>Pleasant</span>
+                    <span>{t('emotion.scale.unpleasant')}</span>
+                    <span>{t('emotion.scale.pleasant')}</span>
                   </div>
                 </div>
               </div>
@@ -202,22 +207,26 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
           {/* Step 2: What best describes */}
           {step === 2 && (
             <div className="flex flex-col h-full">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">What best describes it?</h2>
-              <p className="text-xs sm:text-sm text-gray-500 mb-4">Select all that apply <span className="text-blue-500">+0.5 pts each</span></p>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+                {t('emotion.question.describe')}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 mb-4">
+                {t('emotion.hint.selectAll')} <span className="text-blue-500">+0.5 pts</span>
+              </p>
 
               <div className="flex-1 overflow-y-auto -mx-2 px-2 min-h-0">
                 <div className="grid grid-cols-2 gap-2">
-                  {getDisplayedDescriptions().map(desc => (
+                  {getDisplayedDescriptions().map(descKey => (
                     <button
-                      key={desc}
-                      onClick={() => toggleDescription(desc)}
+                      key={descKey}
+                      onClick={() => toggleDescription(descKey)}
                       className={`py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 ${
-                        selectedDescriptions.includes(desc)
+                        selectedDescriptions.includes(descKey)
                           ? 'bg-blue-500 text-white shadow-md scale-95'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {desc}
+                      {t(descKey)}
                     </button>
                   ))}
                 </div>
@@ -228,9 +237,9 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                     className="w-full mt-3 py-2 flex items-center justify-center gap-1 text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
                   >
                     {showAllDescriptions ? (
-                      <>Show Less <ChevronUp size={16} /></>
+                      <>{t('common.showLess')} <ChevronUp size={16} /></>
                     ) : (
-                      <>Show More ({allDescriptions.length - 6} more) <ChevronDown size={16} /></>
+                      <>{t('common.showMore')} ({allDescriptions.length - 6}) <ChevronDown size={16} /></>
                     )}
                   </button>
                 )}
@@ -241,25 +250,29 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
           {/* Step 3: What's having the biggest impact */}
           {step === 3 && (
             <div className="flex flex-col h-full">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">What's impacting you most?</h2>
-              <p className="text-xs sm:text-sm text-gray-500 mb-4">Select up to 3 factors <span className="text-green-500">+0.67 pts each</span></p>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+                {t('emotion.question.impact')}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500 mb-4">
+                {t('emotion.hint.selectUpTo3')} <span className="text-green-500">+0.67 pts</span>
+              </p>
 
               <div className="flex-1 overflow-y-auto -mx-2 px-2 min-h-0">
                 <div className="grid grid-cols-2 gap-2">
-                  {getDisplayedImpacts().map(impact => (
+                  {getDisplayedImpacts().map(impactKey => (
                     <button
-                      key={impact}
-                      onClick={() => toggleImpact(impact)}
-                      disabled={selectedImpacts.length >= 3 && !selectedImpacts.includes(impact)}
+                      key={impactKey}
+                      onClick={() => toggleImpact(impactKey)}
+                      disabled={selectedImpacts.length >= 3 && !selectedImpacts.includes(impactKey)}
                       className={`py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 ${
-                        selectedImpacts.includes(impact)
+                        selectedImpacts.includes(impactKey)
                           ? 'bg-green-500 text-white shadow-md scale-95'
                           : selectedImpacts.length >= 3
                           ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {impact}
+                      {t(impactKey)}
                     </button>
                   ))}
                 </div>
@@ -270,9 +283,9 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                     className="w-full mt-3 py-2 flex items-center justify-center gap-1 text-sm text-green-500 hover:text-green-600 font-medium transition-colors"
                   >
                     {showAllImpacts ? (
-                      <>Show Less <ChevronUp size={16} /></>
+                      <>{t('common.showLess')} <ChevronUp size={16} /></>
                     ) : (
-                      <>Show More ({allImpacts.length - 6} more) <ChevronDown size={16} /></>
+                      <>{t('common.showMore')} ({allImpacts.length - 6}) <ChevronDown size={16} /></>
                     )}
                   </button>
                 )}
@@ -283,13 +296,15 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
           {/* Step 4: Additional Context */}
           {step === 4 && (
             <div className="flex flex-col h-full">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">Add more context?</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
+                {t('emotion.question.context')}
+              </h2>
               <p className="text-xs sm:text-sm text-gray-500 mb-4">
-                Optional <span className="text-purple-500">+1-3 pts for detail</span>
+                {t('emotion.hint.optional')} <span className="text-purple-500">+1-3 pts</span>
               </p>
 
               <textarea
-                placeholder="What's on your mind?..."
+                placeholder={t('emotion.placeholder.context')}
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
                 maxLength={300}
@@ -299,28 +314,28 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                 {context.length}/300
                 {context.trim().length >= 25 && (
                   <span className="ml-2 text-purple-500">
-                    +{context.trim().length >= 150 ? '3' : context.trim().length >= 75 ? '2' : '1'} bonus pts!
+                    +{context.trim().length >= 150 ? '3' : context.trim().length >= 75 ? '2' : '1'} {t('emotion.bonusPoints')}
                   </span>
                 )}
               </div>
 
               {/* Summary */}
               <div className="mt-4 p-3 sm:p-4 bg-gray-50 rounded-2xl">
-                <p className="text-xs text-gray-500 mb-2">Your log summary:</p>
+                <p className="text-xs text-gray-500 mb-2">{t('emotion.summary.title')}</p>
                 <div className="flex items-start gap-2 text-sm">
                   <span className="text-xl sm:text-2xl flex-shrink-0">{currentLabel.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-700 text-sm break-words">
-                      {selectedDescriptions.join(', ')}
+                      {selectedDescriptions.map(key => t(key)).join(', ')}
                     </div>
                     <div className="text-xs text-gray-500 break-words">
-                      Impact: {selectedImpacts.join(', ')}
+                      {t('emotion.summary.impact')}: {selectedImpacts.map(key => t(key)).join(', ')}
                     </div>
                   </div>
                 </div>
                 <div className="mt-2 pt-2 border-t border-gray-200">
                   <p className="text-xs font-semibold text-blue-600">
-                    Estimated Score: {calculateScore()}/10 🌟
+                    {t('emotion.summary.score')}: {calculateScore()}/10 🌟
                   </p>
                 </div>
               </div>
@@ -328,7 +343,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
           )}
         </div>
 
-        {/* Navigation Buttons - Fixed at bottom */}
+        {/* Navigation Buttons */}
         <div className="p-4 pt-0 flex-shrink-0">
           <div className="flex gap-2 sm:gap-3">
             {step > 1 && (
@@ -337,7 +352,7 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                 className="flex items-center justify-center gap-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-full font-medium text-sm sm:text-base hover:bg-gray-200 transition-all duration-200 hover:scale-105"
               >
                 <ChevronLeft size={18} />
-                Back
+                {t('common.back')}
               </button>
             )}
             
@@ -350,18 +365,17 @@ const HourlyEmotionLog = ({ onSubmit, onClose }) => {
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {step === 4 ? 'Save Log' : 'Continue'}
+              {step === 4 ? t('emotion.action.save') : t('common.continue')}
               {step < 4 && <ChevronRight size={18} />}
             </button>
           </div>
 
-          {/* Skip button for optional step */}
           {step === 4 && (
             <button
               onClick={handleSubmit}
               className="w-full mt-2 py-2 text-gray-500 text-xs sm:text-sm hover:text-gray-700 transition-colors duration-200"
             >
-              Skip
+              {t('common.skip')}
             </button>
           )}
         </div>

@@ -1,21 +1,63 @@
+// Translation keys instead of raw text
 export const emotionLabels = [
-    { value: 1, label: 'Very Unpleasant', emoji: '😢' },
-    { value: 2, label: 'Unpleasant', emoji: '😟' },
-    { value: 3, label: 'Slightly Unpleasant', emoji: '😕' },
-    { value: 4, label: 'Neutral', emoji: '😐' },
-    { value: 5, label: 'Slightly Pleasant', emoji: '🙂' },
-    { value: 6, label: 'Pleasant', emoji: '😊' },
-    { value: 7, label: 'Very Pleasant', emoji: '😄' }
-  ];
+  { value: 1, key: 'emotion.veryUnpleasant', emoji: '😢' },
+  { value: 2, key: 'emotion.unpleasant', emoji: '😟' },
+  { value: 3, key: 'emotion.slightlyUnpleasant', emoji: '😕' },
+  { value: 4, key: 'emotion.neutral', emoji: '😐' },
+  { value: 5, key: 'emotion.slightlyPleasant', emoji: '🙂' },
+  { value: 6, key: 'emotion.pleasant', emoji: '😊' },
+  { value: 7, key: 'emotion.veryPleasant', emoji: '😄' }
+];
 
-  export const descriptions = {
-    low: ['Sad', 'Anxious', 'Stressed', 'Angry', 'Lonely', 'Overwhelmed', 'Frustrated', 'Tired'],
-    medium: ['Calm', 'Content', 'Okay', 'Relaxed', 'Peaceful', 'Stable', 'Balanced'],
-    high: ['Happy', 'Excited', 'Energetic', 'Grateful', 'Confident', 'Motivated', 'Joyful', 'Loved']
-  };
+export const descriptions = {
+  low: [
+    'description.sad',
+    'description.anxious',
+    'description.stressed',
+    'description.angry',
+    'description.lonely',
+    'description.overwhelmed',
+    'description.frustrated',
+    'description.tired'
+  ],
+  medium: [
+    'description.calm',
+    'description.content',
+    'description.okay',
+    'description.relaxed',
+    'description.peaceful',
+    'description.stable',
+    'description.balanced'
+  ],
+  high: [
+    'description.happy',
+    'description.excited',
+    'description.energetic',
+    'description.grateful',
+    'description.confident',
+    'description.motivated',
+    'description.joyful',
+    'description.loved'
+  ]
+};
 
-  export const impacts = [
-      'Family', 'Friends', 'Work', 'School', 'Health', 'Exercise',
-      'Sleep', 'Weather', 'News', 'Social Media', 'Hobbies', 'Food',
-      'Money', 'Relationships', 'Goals', 'Nature', 'Music', 'Other'
-    ];
+export const impacts = [
+  'impact.family',
+  'impact.friends',
+  'impact.work',
+  'impact.school',
+  'impact.health',
+  'impact.exercise',
+  'impact.sleep',
+  'impact.weather',
+  'impact.news',
+  'impact.socialMedia',
+  'impact.hobbies',
+  'impact.food',
+  'impact.money',
+  'impact.relationships',
+  'impact.goals',
+  'impact.nature',
+  'impact.music',
+  'impact.other'
+];
