@@ -8,13 +8,27 @@ const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
   const [collecting, setCollecting] = useState(null);
   const { t } = useLanguage();
 
+  // Check interval ref
+  const spawnCheckIntervalRef = useRef(null);
+
   useEffect(() => {
-    if (treeId) {
-      loadFruits();
-      
-      // Auto-spawn fruits if needed
+    if (treeId) return;
+
+    loadFruits();
+    checkAndSpawnFruits();
+
+    // Set up periodic checking (every 5 minutes)
+    spawnCheckIntervalRef.current = setInterval(() => {
       checkAndSpawnFruits();
-    }
+    }, 5 * 60 * 1000);
+
+    // Cleanup
+    return () => {
+      if (spawnCheckIntervalRef.current) {
+        clearInterval(spawnCheckIntervalRef.current);
+      }
+    };
+
   }, [treeId]);
 
   const loadFruits = async () => {
@@ -31,7 +45,7 @@ const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
       const shouldSpawn = await fruitService.shouldSpawnFruits(treeId);
       if (shouldSpawn) {
         await fruitService.spawnFruits(treeId);
-        loadFruits();
+        await loadFruits();
       }
     } catch (error) {
       console.error('Error spawning fruits:', error);

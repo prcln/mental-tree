@@ -1,5 +1,6 @@
 import React, { memo, useState, useEffect, useCallback, useRef } from 'react';
-import { Droplets, MessageCircle, Star, Share2, RotateCcw, Apple, Store } from 'lucide-react';
+import { supabase } from '../supabase/client.js';
+import { Droplets, MessageCircle, Star, Share2, RotateCcw, Apple, Store, Clock } from 'lucide-react';
 import FruitInventory from '../components/Fruit/FruitInventory.jsx';
 import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
 import HourlyEmotionLog from '../components/MoodTree/HourlyEmotionLog.jsx';
@@ -57,6 +58,11 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
   const [spawnMessage, setSpawnMessage] = useState('');
   const [collectedFruit, setCollectedFruit] = useState(null);
 
+  // ✅ NEW: Fruit spawn timer state
+  const [nextSpawnTime, setNextSpawnTime] = useState(null);
+  const [spawnTimeMessage, setSpawnTimeMessage] = useState('');
+  const [canSpawnNow, setCanSpawnNow] = useState(false);
+
   // Use ref to prevent double-submission
   const isSubmittingRef = useRef(false);
   
@@ -85,6 +91,82 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
       console.error('Error loading fruits:', err);
     }
   }, [treeId]);
+
+  // ✅ NEW: Check next spawn time
+  const checkNextSpawnTime = useCallback(async () => {
+    if (!treeId || !isOwner) return;
+
+    try {
+      // Get tree data with last spawn time
+      const { data: tree, error: treeError } = await supabase
+        .from('trees')
+        .select('stage, last_fruit_spawn, tree_type')
+        .eq('id', treeId)
+        .single();
+
+      if (treeError) throw treeError;
+
+      // Get spawn settings
+      const { data: settings, error: settingsError } = await supabase
+        .from('fruit_types')
+        .select('spawn_probability')
+        .eq('tree_stage', tree.stage)
+        .maybeSingle();
+
+      if (settingsError) throw settingsError;
+
+      // If no settings or interval is 0, spawning is disabled
+      if (!settings || settings.spawn_interval_hours === 0) {
+        setSpawnTimeMessage('Fruit spawning not available');
+        setCanSpawnNow(false);
+        return;
+      }
+
+      // Check current fruit count
+      const fruitCount = fruits.length;
+      
+      if (fruitCount >= settings.max_fruits_per_tree) {
+        setSpawnTimeMessage('Maximum fruits reached! Collect some first.');
+        setCanSpawnNow(false);
+        return;
+      }
+
+      // Calculate next spawn time
+      if (!tree.last_fruit_spawn) {
+        setSpawnTimeMessage('Ready to spawn fruits!');
+        setCanSpawnNow(true);
+        return;
+      }
+
+      const lastSpawnTime = new Date(tree.last_fruit_spawn).getTime();
+      const intervalMs = settings.spawn_interval_hours * 60 * 60 * 1000;
+      const nextSpawnTimeMs = lastSpawnTime + intervalMs;
+      const timeLeft = nextSpawnTimeMs - Date.now();
+
+      setNextSpawnTime(nextSpawnTimeMs);
+
+      if (timeLeft <= 0) {
+        setSpawnTimeMessage('Ready to spawn fruits!');
+        setCanSpawnNow(true);
+      } else {
+        setCanSpawnNow(false);
+        // Format time left
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+          setSpawnTimeMessage(`Next spawn in ${hours}h ${minutes}m`);
+        } else if (minutes > 0) {
+          setSpawnTimeMessage(`Next spawn in ${minutes}m ${seconds}s`);
+        } else {
+          setSpawnTimeMessage(`Next spawn in ${seconds}s`);
+        }
+      }
+    } catch (err) {
+      console.error('Error checking spawn time:', err);
+    }
+  }, [treeId, isOwner, fruits.length]);
 
   // Check if user can check in (from database)
   const checkCanCheckIn = useCallback(async () => {
@@ -132,15 +214,18 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
 
     checkCanCheckIn();
     checkCanResetTree();
+    checkNextSpawnTime(); // ✅ Initial check
 
     const intervalId1 = setInterval(checkCanCheckIn, 1000);
     const intervalId2 = setInterval(checkCanResetTree, 1000);
+    const intervalId3 = setInterval(checkNextSpawnTime, 1000); // ✅ Update every second
 
     return () => {
       clearInterval(intervalId1);
       clearInterval(intervalId2);
+      clearInterval(intervalId3);
     };
-  }, [isOwner, checkCanCheckIn, checkCanResetTree]);
+  }, [isOwner, checkCanCheckIn, checkCanResetTree, checkNextSpawnTime]);
 
   
   // Effect to load messages and fruits when treeId changes
@@ -243,38 +328,42 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
   }, [onRetakeQuiz]);
 
   // Fruit spawn handler
-const handleSpawnFruits = useCallback(async () => {
-  if (!treeId || isSpawningFruits) return;
-  
-  setIsSpawningFruits(true);
-  setSpawnMessage('');
-
-  try {
-    const result = await fruitService.spawnFruits(treeId);
-    const spawnCount = typeof result === 'number' ? result : result?.count || 0;
+  const handleSpawnFruits = useCallback(async () => {
+    if (!treeId || isSpawningFruits) return;
     
-    if (spawnCount > 0) {
-      setSpawnMessage(`✨ ${spawnCount} fruit(s) spawned!`);
-      
-      // Reload fruits from database to get the new spawned fruits
-      await loadFruits();
-      
-      // Update inventory key to refresh inventory modal
-      setInventoryKey(prev => prev + 1);
-    } else {
-      setSpawnMessage('No fruits spawned. Try again later!');
-    }
+    setIsSpawningFruits(true);
+    setSpawnMessage('');
 
-    // Clear message after 3 seconds
-    setTimeout(() => setSpawnMessage(''), 3000);
-  } catch (error) {
-    console.error('Error spawning fruits:', error);
-    setSpawnMessage('❌ Failed to spawn fruits');
-    setTimeout(() => setSpawnMessage(''), 3000);
-  } finally {
-    setIsSpawningFruits(false);
-  }
-}, [treeId, isSpawningFruits, loadFruits]);
+    try {
+      const result = await fruitService.spawnFruits(treeId);
+      const spawnCount = typeof result === 'number' ? result : result?.count || 0;
+      
+      if (spawnCount > 0) {
+        setSpawnMessage(`✨ ${spawnCount} fruit(s) spawned!`);
+        
+        // Reload fruits from database to get the new spawned fruits
+        await loadFruits();
+        
+        // Update inventory key to refresh inventory modal
+        setInventoryKey(prev => prev + 1);
+
+        // ✅ Recheck spawn time after spawning
+        checkNextSpawnTime();
+      } else {
+        setSpawnMessage('No fruits spawned. Try again later!');
+      }
+
+      // Clear message after 3 seconds
+      setTimeout(() => setSpawnMessage(''), 3000);
+    } catch (error) {
+      console.error('Error spawning fruits:', error);
+      setSpawnMessage('❌ Failed to spawn fruits');
+      setTimeout(() => setSpawnMessage(''), 3000);
+    } finally {
+      setIsSpawningFruits(false);
+    }
+  }, [treeId, isSpawningFruits, loadFruits, checkNextSpawnTime]);
+
   // Fruit collection handler
   const handleFruitCollect = useCallback(async (result) => {
     if (result?.fruit_type || result?.success) {
@@ -292,8 +381,11 @@ const handleSpawnFruits = useCallback(async () => {
       
       // Reload fruits from database to ensure sync
       await loadFruits();
+
+      // ✅ Recheck spawn time after collection
+      checkNextSpawnTime();
     }
-  }, [loadFruits]);
+  }, [loadFruits, checkNextSpawnTime]);
 
 
   // --- Render Logic ---
@@ -317,32 +409,37 @@ const handleSpawnFruits = useCallback(async () => {
   return (
     <div className="mood-tree-container">
       <div className="mood-tree-header">
-      <h1>
-        ✨  {treeData.tree_type ? treeData.tree_type.charAt(0).toUpperCase() + treeData.tree_type.slice(1) : ''} Tree ✨
-      </h1>
-      <div className="tree-stats">
-        <div className="stat">
-          <Droplets size={18} />
-          <span>{treeData.mood_score}</span>
-        </div>
-        <div className="stat">
-          <MessageCircle size={18} />
-          <span>{messages.length}</span>
-        </div>
-        <div className="stat">
-          <Apple size={18} />
-          <span>{fruits.length}</span>
-        </div>
-        <div className="stat stage-stat">
-          <Star size={16} />
-          <span>{stageNames[treeData.stage]}</span>
+        <h1>
+          ✨  {treeData.tree_type ? treeData.tree_type.charAt(0).toUpperCase() + treeData.tree_type.slice(1) : ''} Tree ✨
+        </h1>
+        <div className="tree-stats">
+          <div className="stat">
+            <Droplets size={18} />
+            <span>{treeData.mood_score}</span>
+          </div>
+          <div className="stat">
+            <MessageCircle size={18} />
+            <span>{messages.length}</span>
+          </div>
+          <div className="stat">
+            <Apple size={18} />
+            <span>{fruits.length}</span>
+          </div>
+          <div className="stat stage-stat">
+            <Star size={16} />
+            <span>{stageNames[treeData.stage]}</span>
+          </div>
         </div>
       </div>
-      </div>
-      <div className="stage-label-header">
-        <Star size={16} />
-        <span>{stageNames[treeData.stage]}</span>
-      </div>
+
+      {/* ✅ NEW: Fruit Spawn Timer Section */}
+      {isOwner && (
+        <div className={`fruit-spawn-timer ${canSpawnNow ? 'ready' : ''}`}>
+          <Clock size={16} />
+          <span>{spawnTimeMessage}</span>
+          {canSpawnNow && <span className="ready-indicator">🌟</span>}
+        </div>
+      )}
 
       {/* Fruit notifications */}
       {spawnMessage && (
@@ -397,11 +494,11 @@ const handleSpawnFruits = useCallback(async () => {
             <button 
               className="btn btn-fruit-spawn"
               onClick={handleSpawnFruits}
-              disabled={isSpawningFruits}
-              title="Test fruit spawning"
+              disabled={isSpawningFruits || !canSpawnNow}
+              title={canSpawnNow ? "Spawn fruits now" : spawnTimeMessage}
             >
               <Apple size={18} />
-              {isSpawningFruits ? 'Spawning...' : '🧪 Spawn Fruits'}
+              {isSpawningFruits ? 'Spawning...' : canSpawnNow ? '✨ Spawn Fruits' : '⏳ Wait...'}
             </button>
           </>
         )}
@@ -457,43 +554,43 @@ const handleSpawnFruits = useCallback(async () => {
       )}
 
       {/* Quick access buttons */}
-<div className="quick-access-buttons">
-  <button 
-    className="btn-quick-access"
-    onClick={() => setShowInventory(true)}
-    title="Inventory"
-  >
-    🎒
-  </button>
-  <button 
-    className="btn-quick-access"
-    onClick={() => setShowTrade(true)}
-    title="Trade Market"
-  >
-    <Store size={20} />
-  </button>
-</div>
+      <div className="quick-access-buttons">
+        <button 
+          className="btn-quick-access"
+          onClick={() => setShowInventory(true)}
+          title="Inventory"
+        >
+          🎒
+        </button>
+        <button 
+          className="btn-quick-access"
+          onClick={() => setShowTrade(true)}
+          title="Trade Market"
+        >
+          <Store size={20} />
+        </button>
+      </div>
 
       {/* Inventory modal */}
       {showInventory && (
         <FruitInventory
-        key={inventoryKey}  
-        userId={currentUserId}
-        onClose={() => setShowInventory(false)}
+          key={inventoryKey}  
+          userId={currentUserId}
+          onClose={() => setShowInventory(false)}
         />
       )}
 
       {/* Trade modal */}
-{showTrade && (
-  <FruitTrade
-    userId={currentUserId}
-    onClose={() => setShowTrade(false)}
-    onTradeComplete={() => {
-      setInventoryKey(prev => prev + 1);
-      loadFruits();
-    }}
-  />
-)}
+      {showTrade && (
+        <FruitTrade
+          userId={currentUserId}
+          onClose={() => setShowTrade(false)}
+          onTradeComplete={() => {
+            setInventoryKey(prev => prev + 1);
+            loadFruits();
+          }}
+        />
+      )}
     </div>
   );
 };

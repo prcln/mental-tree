@@ -407,3 +407,62 @@
 .mood-tree-controls .btn svg {
   margin-right: 0.3rem;
 }
+
+/* Fruit Spawn Timer */
+.fruit-spawn-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  margin: 16px auto;
+  max-width: 400px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.fruit-spawn-timer.ready {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.fruit-spawn-timer svg {
+  flex-shrink: 0;
+}
+
+.fruit-spawn-timer .ready-indicator {
+  font-size: 20px;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(245, 87, 108, 0.6), 0 0 30px rgba(245, 87, 108, 0.3);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Update spawn button styles */
+.btn-fruit-spawn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-fruit-spawn:not(:disabled):hover {
+  transform: scale(1.05);
+}
