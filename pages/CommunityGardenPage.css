@@ -73,7 +73,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center bottom;
-  transform: scale(1.05);
+  transform: scale(1.1);
   z-index: 0;
   pointer-events: none;
 }

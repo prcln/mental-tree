@@ -156,7 +156,7 @@ const CommunityGarden = () => {
           <div className="grass-field">
             {/* SVG Background */}
             <img 
-              src="../../assets/grassField.svg" 
+              src="../../src/assets/grassField.svg" 
               alt="Grass field" 
               className="grass-field-svg"
             />

@@ -12,42 +12,6 @@
   border-style: dashed;
 }
 
-/* Sky Elements */
-.tree-sky {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 50%;
-  pointer-events: none;
-}
-
-.tree-sun {
-  position: absolute;
-  top: 2rem;
-  right: 5rem;
-  color: #FFD700;
-  animation: pulse 3s ease-in-out infinite;
-}
-
-.tree-cloud {
-  position: absolute;
-  color: white;
-  opacity: 0.6;
-}
-
-.cloud-1 {
-  top: 4rem;
-  left: 5rem;
-  animation: float 6s ease-in-out infinite;
-}
-
-.cloud-2 {
-  top: 8rem;
-  right: 10rem;
-  animation: float 8s ease-in-out infinite 1s;
-}
-
 /* Tree Wrapper */
 /* Tree Wrapper - sits on the ground naturally */
 .tree-wrapper {
@@ -72,11 +36,39 @@
   justify-content: center;
 }
 
+/* Remove the max-width/max-height approach */
 .tree-svg {
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
   object-fit: contain;
-  object-position: bottom center; /* Tree grows from bottom */
+  object-position: bottom center;
+  transition: all 1s ease-in-out;
+}
+
+/* Set specific heights for each stage */
+.tree-stage-seed .tree-svg {
+  height: 80px;
+}
+
+.tree-stage-sprout .tree-svg {
+  height: 200px;
+}
+
+.tree-stage-sapling .tree-svg {
+  height: 350px;
+}
+
+.tree-stage-young .tree-svg {
+  height: 450px;
+}
+
+.tree-stage-mature .tree-svg {
+  height: 520px;
+}
+
+.tree-stage-blooming .tree-svg {
+  height: 600px;
 }
 
 /* Messages and fruits are positioned relative to tree-visual */
@@ -85,47 +77,6 @@
   position: absolute;
   inset: 0; /* Covers the entire tree-visual area */
   pointer-events: none;
-}
-
-/* Stage-specific sizing */
-.tree-stage-seed .tree-svg {
-  max-width: 15%;
-  max-height: 15%;
-}
-
-.tree-stage-sprout .tree-svg {
-  max-width: 30%;
-  max-height: 30%;
-}
-
-.tree-stage-sapling .tree-svg {
-  max-width: 50%;
-  max-height: 50%;
-}
-
-.tree-stage-young .tree-svg {
-  max-width: 70%;
-  max-height: 70%;
-}
-
-.tree-stage-mature .tree-svg {
-  max-width: 85%;
-  max-height: 85%;
-}
-
-.tree-stage-blooming .tree-svg {
-  max-width: 100%;
-  max-height: 100%;
-}
-
-/* Bloom Sparkle */
-.bloom-sparkle {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #FFD700;
-  animation: sparkle 2s ease-in-out infinite;
 }
 
 /* Messages Layer */
@@ -158,7 +109,16 @@
   left: 0;
   width: 100%;
   height: 11.5rem;
-  background: linear-gradient(to top, #228B22 0%, #90EE90 100%);
+  overflow: hidden; /* Prevents grass from spilling out */
+}
+
+.grass-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Use 'cover' to fill the entire ground area */
+  object-position: center bottom; /* Align to bottom */
+  display: block;
+  scale: 1.2;
 }
 
 /* Stage Info */
@@ -352,10 +312,6 @@
 
   .message-range {
     font-size: 0.625rem;
-  }
-
-  .tree-sun {
-    right: 2rem;
   }
 
   .fruits-layer button {

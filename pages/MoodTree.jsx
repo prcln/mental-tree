@@ -93,80 +93,83 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
   }, [treeId]);
 
   // ✅ NEW: Check next spawn time
-  const checkNextSpawnTime = useCallback(async () => {
-    if (!treeId || !isOwner) return;
+  // ✅ FIXED: Check next spawn time
+const checkNextSpawnTime = useCallback(async () => {
+  if (!treeId || !isOwner) return;
 
-    try {
-      // Get tree data with last spawn time
-      const { data: tree, error: treeError } = await supabase
-        .from('trees')
-        .select('stage, last_fruit_spawn, tree_type')
-        .eq('id', treeId)
-        .single();
+  try {
+    // Get tree data with last spawn time
+    const { data: tree, error: treeError } = await supabase
+      .from('trees')
+      .select('stage, last_fruit_spawn, tree_type')
+      .eq('id', treeId)
+      .single();
 
-      if (treeError) throw treeError;
+    if (treeError) throw treeError;
 
-      // Get spawn settings
-      const { data: settings, error: settingsError } = await supabase
-        .from('fruit_types')
-        .select('spawn_probability')
-        .eq('tree_stage', tree.stage)
-        .maybeSingle();
+    // ✅ FIX: Query fruit_spawn_settings instead of fruit_types
+    const { data: settings, error: settingsError } = await supabase
+      .from('fruit_spawn_settings')
+      .select('spawn_interval_hours, max_fruits_per_tree')
+      .eq('tree_stage', tree.stage)
+      .maybeSingle();
 
-      if (settingsError) throw settingsError;
+    if (settingsError) throw settingsError;
 
-      // If no settings or interval is 0, spawning is disabled
-      if (!settings || settings.spawn_interval_hours === 0) {
-        setSpawnTimeMessage('Fruit spawning not available');
-        setCanSpawnNow(false);
-        return;
-      }
-
-      // Check current fruit count
-      const fruitCount = fruits.length;
-      
-      if (fruitCount >= settings.max_fruits_per_tree) {
-        setSpawnTimeMessage('Maximum fruits reached! Collect some first.');
-        setCanSpawnNow(false);
-        return;
-      }
-
-      // Calculate next spawn time
-      if (!tree.last_fruit_spawn) {
-        setSpawnTimeMessage('Ready to spawn fruits!');
-        setCanSpawnNow(true);
-        return;
-      }
-
-      const lastSpawnTime = new Date(tree.last_fruit_spawn).getTime();
-      const intervalMs = settings.spawn_interval_hours * 60 * 60 * 1000;
-      const nextSpawnTimeMs = lastSpawnTime + intervalMs;
-      const timeLeft = nextSpawnTimeMs - Date.now();
-
-      setNextSpawnTime(nextSpawnTimeMs);
-
-      if (timeLeft <= 0) {
-        setSpawnTimeMessage('Ready to spawn fruits!');
-        setCanSpawnNow(true);
-      } else {
-        setCanSpawnNow(false);
-        // Format time left
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-        if (hours > 0) {
-          setSpawnTimeMessage(`Next spawn in ${hours}h ${minutes}m`);
-        } else if (minutes > 0) {
-          setSpawnTimeMessage(`Next spawn in ${minutes}m ${seconds}s`);
-        } else {
-          setSpawnTimeMessage(`Next spawn in ${seconds}s`);
-        }
-      }
-    } catch (err) {
-      console.error('Error checking spawn time:', err);
+    // If no settings or interval is 0, spawning is disabled
+    if (!settings || settings.spawn_interval_hours === 0) {
+      setSpawnTimeMessage('Fruit spawning not available');
+      setCanSpawnNow(false);
+      return;
     }
-  }, [treeId, isOwner, fruits.length]);
+
+    // Check current fruit count
+    const fruitCount = fruits.length;
+    
+    if (fruitCount >= settings.max_fruits_per_tree) {
+      setSpawnTimeMessage('Maximum fruits reached! Collect some first.');
+      setCanSpawnNow(false);
+      return;
+    }
+
+    // Calculate next spawn time
+    if (!tree.last_fruit_spawn) {
+      setSpawnTimeMessage('Ready to spawn fruits!');
+      setCanSpawnNow(true);
+      return;
+    }
+
+    const lastSpawnTime = new Date(tree.last_fruit_spawn).getTime();
+    const intervalMs = settings.spawn_interval_hours * 60 * 60 * 1000;
+    const nextSpawnTimeMs = lastSpawnTime + intervalMs;
+    const timeLeft = nextSpawnTimeMs - Date.now();
+
+    setNextSpawnTime(nextSpawnTimeMs);
+
+    if (timeLeft <= 0) {
+      setSpawnTimeMessage('Ready to spawn fruits!');
+      setCanSpawnNow(true);
+    } else {
+      setCanSpawnNow(false);
+      // Format time left
+      const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+      if (hours > 0) {
+        setSpawnTimeMessage(`Next spawn in ${hours}h ${minutes}m`);
+      } else if (minutes > 0) {
+        setSpawnTimeMessage(`Next spawn in ${minutes}m ${seconds}s`);
+      } else {
+        setSpawnTimeMessage(`Next spawn in ${seconds}s`);
+      }
+    }
+  } catch (err) {
+    console.error('Error checking spawn time:', err);
+    setSpawnTimeMessage('Error checking spawn time');
+    setCanSpawnNow(false);
+  }
+}, [treeId, isOwner, fruits.length]);
 
   // Check if user can check in (from database)
   const checkCanCheckIn = useCallback(async () => {

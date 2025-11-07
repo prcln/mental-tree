@@ -5,6 +5,7 @@ import './TreeVisualization.css';
 import { fruitEmojis } from '../../constants/fruits';
 import { pointsUntilNextStage } from '../../services/stageHelper';
 import { fruitService } from '../../services/fruitService';
+import { positionsFruit, positionsTree } from '../../constants/tree';
 
 import seedImg from '../../src/assets/tree_stages/seed.svg';
 import sproutImg from '../../src/assets/tree_stages/sprout.svg';
@@ -25,95 +26,14 @@ const stageImages = {
 
 // Stage-specific message positions
 const getMessagePositions = (stage) => {
-  const positions = {
-    seed: [],
-    sprout: [
-      { x: 50, y: 30 },
-      { x: 55, y: 25 },
-    ],
-    sapling: [
-      { x: 45, y: 25 }, 
-      { x: 55, y: 25 }, 
-      { x: 50, y: 35 }
-    ],
-    young: [
-      { x: 35, y: 20 }, 
-      { x: 50, y: 15 }, 
-      { x: 65, y: 20 },
-      { x: 40, y: 35 }, 
-      { x: 60, y: 35 }
-    ],
-    mature: [
-      { x: 30, y: 15 }, 
-      { x: 45, y: 10 }, 
-      { x: 55, y: 10 }, 
-      { x: 70, y: 15 },
-      { x: 35, y: 30 }, 
-      { x: 50, y: 25 }, 
-      { x: 65, y: 30 },
-      { x: 40, y: 45 }, 
-      { x: 60, y: 45 }
-    ],
-    blooming: [
-      { x: 25, y: 15 }, 
-      { x: 38, y: 10 }, 
-      { x: 50, y: 8 }, 
-      { x: 62, y: 10 }, 
-      { x: 75, y: 15 },
-      { x: 30, y: 25 }, 
-      { x: 45, y: 22 }, 
-      { x: 55, y: 22 }, 
-      { x: 70, y: 25 },
-      { x: 35, y: 38 }, 
-      { x: 50, y: 35 }, 
-      { x: 65, y: 38 },
-      { x: 40, y: 50 }, 
-      { x: 55, y: 52 }, 
-      { x: 70, y: 50 }
-    ]
-  };
-  
-  return positions[stage] || [];
+  return positionsTree[stage] || [];
 };
 
 // Fruit positions on the tree
 const getFruitPositions = (stage) => {
-  const positions = {
-    seed: [],
-    sprout: [],
-    sapling: [
-      { x: 48, y: 32 },
-      { x: 52, y: 32 }
-    ],
-    young: [
-      { x: 38, y: 28 },
-      { x: 50, y: 25 },
-      { x: 62, y: 28 },
-      { x: 45, y: 38 }
-    ],
-    mature: [
-      { x: 33, y: 22 },
-      { x: 48, y: 18 },
-      { x: 58, y: 18 },
-      { x: 67, y: 22 },
-      { x: 38, y: 33 },
-      { x: 62, y: 33 }
-    ],
-    blooming: [
-      { x: 28, y: 20 },
-      { x: 42, y: 15 },
-      { x: 50, y: 13 },
-      { x: 58, y: 15 },
-      { x: 72, y: 20 },
-      { x: 35, y: 30 },
-      { x: 50, y: 28 },
-      { x: 65, y: 30 },
-      { x: 43, y: 42 },
-      { x: 57, y: 42 }
-    ]
-  };
+
   
-  return positions[stage] || [];
+  return positionsFruit[stage] || [];
 };
 
 const TreeVisualization = ({ currentStage, messages, moodScore, treeType, currentUserId, treeId, fruits: externalFruits, onFruitCollect }) => {
@@ -218,18 +138,7 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
   };
 
   return (
-    <div className="tree-scene">
-      {/* Sky */}
-      <div className="tree-sky">
-        <Sun className="tree-sun" size={40} />
-        {currentStage === 'blooming' && (
-          <>
-            <Cloud className="tree-cloud cloud-1" size={30} />
-            <Cloud className="tree-cloud cloud-2" size={25} />
-          </>
-        )}
-      </div>
-      
+    <div className="tree-scene">      
       {/* Tree container */}
       <div className="tree-wrapper">
         <div className={`tree-visual tree-stage-${currentStage}`}>
@@ -300,7 +209,13 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
       </div>
 
       {/* Ground */}
-      <div className="tree-ground"></div>
+      <div className="tree-ground">
+        <img 
+          src="../../src/assets/grassField.svg"
+          alt={`Tree at ${currentStage} stage`}
+          className="grass-svg"
+        />
+      </div>
 
       {/* Stage Info */}
       <div className="tree-stage-info">
