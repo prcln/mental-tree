@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext/AuthContext.jsx';
 import { Loading } from '../components/Others/Loading.jsx';
 import { usePagination, positionPresets } from '../utils/usePagination.jsx';
 
+import grassField from '../src/assets/grassField.svg'
 import './CommunityGardenPage.css';
 
 const CommunityGarden = () => {
@@ -120,8 +121,8 @@ const CommunityGarden = () => {
   if (error) {
     return (
       <div className="garden-error">
-        <p>Error: {error}</p>
-        <button onClick={loadMessages} className="btn btn-primary">Retry</button>
+        <p>{t('common.error')}: {error}</p>
+        <button onClick={loadMessages} className="btn btn-primary">{t('common.retry')}</button>
       </div>
     );
   }
@@ -131,21 +132,21 @@ const CommunityGarden = () => {
       <div className="community-garden-container">
         {/* Header */}
         <div className="garden-header">
-          <h1>🌸 Community Garden 🌸</h1>
-          <p className="garden-subtitle">A shared space for hope, support, and positivity</p>
+          <h1>🌸 {t('garden.title')} 🌸</h1>
+          <p className="garden-subtitle">{t('garden.subtitle')}</p>
           
           <div className="garden-stats">
             <div className="stat">
               <Users size={20} />
-              <span>{messages.length} messages</span>
+              <span>{messages.length} {t('garden.messages')}</span>
             </div>
             <div className="stat">
               <Heart size={20} />
-              <span>Growing together</span>
+              <span>{t('garden.growingTogether')}</span>
             </div>
             {pagination.totalPages > 1 && (
               <div className="stat pagination-stat">
-                <span>Page {pagination.currentPage + 1} of {pagination.totalPages}</span>
+                <span>{t('garden.page')} {pagination.currentPage + 1} {t('garden.of')} {pagination.totalPages}</span>
               </div>
             )}
           </div>
@@ -156,7 +157,7 @@ const CommunityGarden = () => {
           <div className="grass-field">
             {/* SVG Background */}
             <img 
-              src="../../src/assets/grassField.svg" 
+              src={grassField}
               alt="Grass field" 
               className="grass-field-svg"
             />
@@ -166,7 +167,7 @@ const CommunityGarden = () => {
               {messages.length === 0 ? (
                 <div className="no-messages">
                   <Flower2 size={48} className="no-messages-icon" />
-                  <p>Be the first to plant a message in the garden!</p>
+                  <p>{t('garden.noMessages')}</p>
                 </div>
               ) : (
                 pagination.visibleItems.map((message, index) => (
@@ -204,14 +205,14 @@ const CommunityGarden = () => {
           onClick={() => setShowMessageModal(true)}
         >
           <MessageCircle size={24} />
-          <span>Leave a Message</span>
+          <span>{t('garden.leaveMessage')}</span>
         </button>
 
         {/* Info Section */}
         <div className="garden-info">
-          <p>💫 Share your thoughts, encouragement, or words of wisdom</p>
-          <p>🌱 Every positive message helps our community garden bloom</p>
-          <p>💖 Click on messages to like and reply</p>
+          <p>{t('garden.info1')}</p>
+          <p>{t('garden.info2')}</p>
+          <p>{t('garden.info3')}</p>
         </div>
       </div>
 

@@ -111,6 +111,18 @@ export const DailyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
     return recent - older;
   };
 
+  // Helper function to translate description keys
+  const translateDescription = (descKey) => {
+    // Description keys are stored as lowercase in DB (e.g., "sad", "happy")
+    return t(`description.${descKey}`) || descKey;
+  };
+
+  // Helper function to translate impact keys
+  const translateImpact = (impactKey) => {
+    // Impact keys are stored as camelCase in DB (e.g., "family", "socialMedia")
+    return t(`impact.${impactKey}`) || impactKey;
+  };
+
   const trend = calculateTrend();
 
   if (loading) {
@@ -210,7 +222,7 @@ export const DailyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
                  <Minus size={18} />}
                 <span className="text-xs sm:text-sm font-medium">
                   {trend > 0 ? t('reports.trendUp').replace('{value}', trend.toFixed(1)) :
-                   trend < 0 ? t('reports.trendDown').replace('{value}', trend.toFixed(1)) :
+                   trend < 0 ? t('reports.trendDown').replace('{value}', Math.abs(trend).toFixed(1)) :
                    t('reports.trendStable')}
                 </span>
               </div>
@@ -245,7 +257,7 @@ export const DailyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
                     <div className="flex flex-wrap gap-1">
                       {checkIn.descriptions.map((desc, i) => (
                         <span key={i} className="px-2 py-1 bg-white bg-opacity-50 rounded-lg text-xs font-medium">
-                          {desc}
+                          {t(`${desc}`) || desc}
                         </span>
                       ))}
                     </div>
@@ -258,7 +270,7 @@ export const DailyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
                     <div className="flex flex-wrap gap-1">
                       {checkIn.impacts.map((impact, i) => (
                         <span key={i} className="px-2 py-1 bg-white bg-opacity-50 rounded-lg text-xs font-medium">
-                          {impact}
+                          {t(`${impact}`) || impact}
                         </span>
                       ))}
                     </div>

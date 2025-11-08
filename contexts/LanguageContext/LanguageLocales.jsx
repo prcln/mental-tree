@@ -290,7 +290,20 @@ export const translations = {
     'common.continue': 'Continue',
     'common.skip': 'Skip',
     'common.showMore': 'Show More',
-    'common.showLess': 'Show Less'
+    'common.showLess': 'Show Less',
+
+    // Community Garden
+    'garden.title': 'Community Garden',
+    'garden.subtitle': 'A shared space for hope, support, and positivity',
+    'garden.messages': 'messages',
+    'garden.growingTogether': 'Growing together',
+    'garden.page': 'Page',
+    'garden.of': 'of',
+    'garden.noMessages': 'Be the first to plant a message in the garden!',
+    'garden.leaveMessage': 'Leave a Message',
+    'garden.info1': '💫 Share your thoughts, encouragement, or words of wisdom',
+    'garden.info2': '🌱 Every positive message helps our community garden bloom',
+    'garden.info3': '💖 Click on messages to like and reply',
   },
   
   vi: {
@@ -553,5 +566,18 @@ export const translations = {
     'impact.nature': 'Thiên nhiên',
     'impact.music': 'Âm nhạc',
     'impact.other': 'Khác',
+
+    // Community Garden
+    'garden.title': 'Vườn Cộng Đồng',
+    'garden.subtitle': 'Không gian chung cho hy vọng, hỗ trợ và năng lượng tích cực',
+    'garden.messages': 'tin nhắn',
+    'garden.growingTogether': 'Cùng nhau lớn lên',
+    'garden.page': 'Trang',
+    'garden.of': 'trên',
+    'garden.noMessages': 'Hãy là người đầu tiên gieo tin nhắn trong vườn!',
+    'garden.leaveMessage': 'Để lại tin nhắn',
+    'garden.info1': '💫 Chia sẻ suy nghĩ, lời động viên hoặc lời khuyên của bạn',
+    'garden.info2': '🌱 Mỗi tin nhắn tích cực giúp vườn cộng đồng nở rộ',
+    'garden.info3': '💖 Nhấp vào tin nhắn để thích và trả lời',
   }
 };

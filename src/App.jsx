@@ -11,6 +11,7 @@ import './App.css';
 import { UserReportPage } from '../pages/UserPage/UserReportPage';
 import MainLayout from '../components/Layout/MainLayout';
 import CommunityGarden from '../pages/CommunityGardenPage';
+import QuizConfigEditor from '../pages/QuizPage/QuizEditor';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
               <Route path="/tree" element={<TreePage />} />
               <Route path="/report/:treeId" element={<UserReportPage />} />
               <Route path="/garden" element={<CommunityGarden />} />
+              <Route path="/quiz-editor" element={<QuizConfigEditor />} />
             </Route>
 
             {/* Catch all - redirect to home */}

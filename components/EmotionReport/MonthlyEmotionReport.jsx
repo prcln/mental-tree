@@ -22,6 +22,7 @@ export const MonthlyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
       const month = selectedMonth.getMonth() + 1;
       const data = await emotionService.getMonthlyEmotionSummary(treeId, year, month);
       setMonthlyData(data);
+      console.log(monthlyData);
     } catch (error) {
       console.error('Error loading monthly data:', error);
     } finally {
@@ -120,7 +121,9 @@ export const MonthlyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
               <div className="space-y-2">
                 {monthlyData.mostCommonDescriptions.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-gray-700 text-sm sm:text-base flex-shrink-0">{item.description}</span>
+                    <span className="font-medium text-gray-700 text-sm sm:text-base flex-shrink-0">
+                      {t(`${item.description}`) || item.description}
+                    </span>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-[60px]">
                         <div
@@ -128,7 +131,9 @@ export const MonthlyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
                           style={{ width: `${(item.count / monthlyData.checkCount) * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{item.count}x</span>
+                      <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">
+                        {item.count} {t('reports.times')}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -143,8 +148,12 @@ export const MonthlyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {monthlyData.mostCommonImpacts.map((item, idx) => (
                   <div key={idx} className="bg-purple-50 border-2 border-purple-200 rounded-xl p-3 text-center">
-                    <div className="font-medium text-gray-800 text-sm sm:text-base">{item.impact}</div>
-                    <div className="text-xs sm:text-sm text-purple-600">{item.count} {t('reports.biggestImpacts')}</div>
+                    <div className="font-medium text-gray-800 text-sm sm:text-base">
+                      {t(`${item.impact}`) || item.impact}
+                    </div>
+                    <div className="text-xs sm:text-sm text-purple-600">
+                      {item.count} {t('reports.times')}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -154,7 +163,7 @@ export const MonthlyEmotionReport = ({ treeId, activeTab, setActiveTab }) => {
       ) : (
         <div className="bg-white rounded-2xl p-8 sm:p-12 text-center shadow-md">
           <div className="text-5xl sm:text-6xl mb-4">📅</div>
-          <div className="text-lg sm:text-xl font-medium text-gray-800 mb-2">{t('reports.biggestImpacts')}</div>
+          <div className="text-lg sm:text-xl font-medium text-gray-800 mb-2">{t('reports.noDataThisMonth')}</div>
           <div className="text-sm sm:text-base text-gray-500">{t('reports.checkInRegularly')}</div>
         </div>
       )}

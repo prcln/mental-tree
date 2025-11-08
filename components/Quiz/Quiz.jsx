@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './PersonalityQuiz.css';
-import { QUIZ_CONFIG } from '../../constants/quiz';
+import { QUIZ_CONFIG } from '../../constants/QUIZ_CONFIG';
 
 const PersonalityQuiz = ({ onComplete }) => {
   const [hasStarted, setHasStarted] = useState(false);
