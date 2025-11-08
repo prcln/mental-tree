@@ -1,27 +1,45 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 /**
- * Custom hook for pagination logic
+ * Custom hook for pagination logic with random position assignment
  * @param {Array} items - Array of items to paginate
  * @param {Array} positions - Array of position objects for item placement
  * @returns {Object} Pagination state and methods
  */
 export const usePagination = (items, positions) => {
   const [currentPage, setCurrentPage] = useState(0);
+  
+  // Fisher-Yates shuffle algorithm
+  const shuffleArray = useCallback((array) => {
+    if (!array || array.length === 0) return [];
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, []);
+
+  // Initialize with shuffled positions
+  const [shuffledPositions, setShuffledPositions] = useState(() => shuffleArray(positions));
 
   const itemsPerPage = positions.length || 1;
   const totalPages = Math.ceil(items.length / itemsPerPage);
 
-  // Calculate current page data
+  // Shuffle positions when positions array changes
+  useEffect(() => {
+    setShuffledPositions(shuffleArray(positions));
+  }, [positions, shuffleArray]);
+
+  // Calculate current page data with randomized positions
   const paginationData = useMemo(() => {
     const startIdx = currentPage * itemsPerPage;
     const endIdx = startIdx + itemsPerPage;
     const currentItems = items.slice(startIdx, endIdx);
     
     // Only show items for which we have positions
-    const visibleItems = currentItems.slice(0, positions.length);
-    const currentPositions = positions.slice(0, visibleItems.length);
+    const visibleItems = currentItems.slice(0, shuffledPositions.length);
+    const currentPositions = shuffledPositions.slice(0, visibleItems.length);
 
     return {
       visibleItems,
@@ -30,7 +48,7 @@ export const usePagination = (items, positions) => {
       endIdx,
       totalItems: items.length
     };
-  }, [items, positions, currentPage, itemsPerPage]);
+  }, [items, shuffledPositions, currentPage, itemsPerPage]);
 
   const nextPage = useCallback(() => {
     if (currentPage < totalPages - 1) {
@@ -53,6 +71,13 @@ export const usePagination = (items, positions) => {
     setCurrentPage(0);
   }, []);
 
+  // Reshuffle positions manually
+  const reshufflePositions = useCallback(() => {
+    if (positions.length > 0) {
+      setShuffledPositions(shuffleArray(positions));
+    }
+  }, [positions, shuffleArray]);
+
   return {
     currentPage,
     totalPages,
@@ -63,6 +88,7 @@ export const usePagination = (items, positions) => {
     prevPage,
     goToPage,
     resetPage,
+    reshufflePositions, // New method to manually reshuffle
     ...paginationData
   };
 };

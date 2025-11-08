@@ -24,15 +24,9 @@ const stageImages = {
   blooming: bloomingImg,
 };
 
-
 // Stage-specific message positions
 const getMessagePositions = (stage) => {
   return positionsTree[stage] || [];
-};
-
-// Fruit positions on the tree
-const getFruitPositions = (stage) => {
-  return positionsFruit[stage] || [];
 };
 
 const TreeVisualization = ({ currentStage, messages, moodScore, treeType, currentUserId, treeId, fruits: externalFruits, onFruitCollect }) => {
@@ -42,7 +36,6 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
   const [collectionEffect, setCollectionEffect] = useState(null);
 
   const messagePositions = getMessagePositions(currentStage);
-  const fruitPositions = getFruitPositions(currentStage);
   const StageImage = stageImages[currentStage];
   
   // Calculate messages per page based on available positions
@@ -58,23 +51,23 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
   const visibleMessages = currentMessages.slice(0, messagePositions.length);
   const currentPositions = messagePositions.slice(0, visibleMessages.length);
 
-  // Load fruits when treeId changes
+  // Sync external fruits with local state
   useEffect(() => {
     if (externalFruits) {
-      setFruits(externalFruits);
+      // Assign random positions if they don't exist
+      const fruitsWithPositions = externalFruits.map(fruit => {
+        if (!fruit.position_x || !fruit.position_y) {
+          return {
+            ...fruit,
+            position_x: 20 + Math.floor(Math.random() * 60),
+            position_y: 10 + Math.floor(Math.random() * 50)
+          };
+        }
+        return fruit;
+      });
+      setFruits(fruitsWithPositions);
     }
   }, [externalFruits]);
-
-  const loadFruits = async () => {
-    if (!treeId) return;
-    try {
-      const data = await fruitService.getTreeFruits(treeId);
-      console.log('Loaded fruits:', data); // Debug log
-      setFruits(data);
-    } catch (error) {
-      console.error('Error loading fruits:', error);
-    }
-  };
 
   const handleCollect = async (fruitId, fruitType) => {
     if (!currentUserId) {
@@ -100,7 +93,6 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
         // Remove fruit from local state immediately
         setFruits(prevFruits => {
           const newFruits = prevFruits.filter(f => f.id !== fruitId);
-          console.log('Fruits before:', prevFruits.length, 'Fruits after:', newFruits.length);
           return newFruits;
         });
         
@@ -167,11 +159,16 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
             </div>
           )}
 
-          {/* Fruits overlay - positioned relative to tree */}
+          {/* Fruits overlay - positioned relative to tree using database positions */}
           {fruits.length > 0 && currentStage !== 'seed' && (
             <div className="fruits-layer">
-              {fruits.slice(0, fruitPositions.length).map((fruit, index) => {
-                const position = fruitPositions[index];
+              {fruits.map((fruit, index) => {
+                // Use stored position from database or fallback to generated one
+                const position = {
+                  x: fruit.position_x || (20 + Math.floor(Math.random() * 60)),
+                  y: fruit.position_y || (10 + Math.floor(Math.random() * 50))
+                };
+                
                 return (
                   <button
                     key={fruit.id}
@@ -211,7 +208,7 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
       <div className="tree-ground">
         <img 
           src={GrassField}
-          alt={`Tree at ${currentStage} stage`}
+          alt="Grass field"
           className="grass-svg"
         />
       </div>

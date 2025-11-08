@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { fruitService } from '../../services/fruitService';
-import { useTradeData, useTradeForm, useTradeSearch } from "./fruitHook";
+import { useTradeForm, useTradeSearch } from "./fruitHook";
 import { 
   SearchBar, 
   SearchFilters, 
@@ -22,10 +22,16 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     trade: null,
-    type: null // 'accept' or 'cancel'
+    type: null
   });
 
-  const { inventory, trades, myTrades, loading, error, loadData } = useTradeData(userId, activeTab);
+  // Separate state for each data type - load once and keep in memory
+  const [inventory, setInventory] = useState([]);
+  const [trades, setTrades] = useState([]);
+  const [myTrades, setMyTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const filteredTrades = useTradeSearch(trades, searchQuery, searchFilter);
   const {
     offeredFruits,
@@ -37,11 +43,39 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
     maxQuantities
   } = useTradeForm(inventory);
 
+  // Load all data once on mount
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const [inventoryData, tradesData, myTradesData] = await Promise.all([
+        fruitService.getUserInventory(userId),
+        fruitService.getTradeOffers(userId),
+        fruitService.getUserTradeOffers(userId)
+      ]);
+      
+      setInventory(inventoryData);
+      setTrades(tradesData);
+      setMyTrades(myTradesData);
+    } catch (err) {
+      console.error('Error loading trade data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  // Load data only once when component mounts
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
   const handleAcceptTrade = useCallback(async (tradeId) => {
     try {
       await fruitService.acceptTradeOffer(tradeId, userId);
       setConfirmModal({ isOpen: false, trade: null, type: null });
-      await loadData();
+      await loadData(); // Reload to get fresh data
       onTradeComplete?.();
     } catch (err) {
       alert(err.message || 'Failed to accept trade');
@@ -52,7 +86,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
     try {
       await fruitService.cancelTradeOffer(tradeId, userId);
       setConfirmModal({ isOpen: false, trade: null, type: null });
-      await loadData();
+      await loadData(); // Reload to get fresh data
     } catch (err) {
       alert(err.message || 'Failed to cancel trade');
     }
@@ -80,7 +114,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
       );
       resetForm();
       setActiveTab(TABS.MY_TRADES);
-      await loadData();
+      await loadData(); // Reload to get fresh data
     } catch (err) {
       alert(err.message || 'Failed to create trade offer');
     }

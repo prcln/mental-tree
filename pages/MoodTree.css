@@ -466,3 +466,47 @@
 .btn-fruit-spawn:not(:disabled):hover {
   transform: scale(1.05);
 }
+
+/* Spawn Timer Stat */
+.stat-timer {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important;
+  font-weight: 600;
+  animation: pulse-subtle 2s ease-in-out infinite;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.stat-timer.ready {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+}
+
+.stat-timer span {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(245, 87, 108, 0.5), 0 0 30px rgba(245, 87, 108, 0.2);
+  }
+}
+
+@media (max-width: 768px) {
+  .stat-timer {
+    min-width: 100px;
+    font-size: 0.85rem;
+  }
+}

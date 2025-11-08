@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { fruitService } from "../../services/fruitService";
 import { AUTO_REFRESH_INTERVAL, REQUEST_TIMEOUT, TABS, SEARCH_FILTERS } from "./constants";
-import { getTradeUsername } from "./fruitUtil";
+import { getTradeUsername } from "./fruitUtil.jsx";
 
 // Custom Hooks
 const useTradeData = (userId, activeTab) => {

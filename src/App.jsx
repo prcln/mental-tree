@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext/AuthContext';
 import { LanguageProvider } from '../contexts/LanguageContext/LanguageContext';
+import PositionFinder from '../components/PosFinder/PosFinder';
 
 import ProtectedRoute from '../components/ProtectedRoute';
 import AuthForm from '../components/AuthComponent/AuthComponent';
@@ -12,6 +13,7 @@ import { UserReportPage } from '../pages/UserPage/UserReportPage';
 import MainLayout from '../components/Layout/MainLayout';
 import CommunityGarden from '../pages/CommunityGardenPage';
 import QuizConfigEditor from '../pages/QuizPage/QuizEditor';
+
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
               <Route path="/report/:treeId" element={<UserReportPage />} />
               <Route path="/garden" element={<CommunityGarden />} />
               <Route path="/quiz-editor" element={<QuizConfigEditor />} />
+              <Route path="/pos" element={<PositionFinder />} />
             </Route>
 
             {/* Catch all - redirect to home */}

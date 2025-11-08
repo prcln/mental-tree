@@ -75,21 +75,7 @@ export const fruitService = {
     }
   },
 
-  /**
-   * Spawn fruits on a tree
-   */
-  spawnFruits: async (treeId) => {
-    try {
-      const { data, error } = await withTimeout(
-        supabase.rpc('spawn_tree_fruits', { p_tree_id: treeId })
-      );
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      return handleError('spawnFruits', error);
-    }
-  },
 
   /**
    * Collect a fruit (owner only)
@@ -357,44 +343,74 @@ export const fruitService = {
     }
   },
 
+  /**
+   * Spawn fruits on a tree
+   * FIXED: Added better error handling and logging
+   */
+  spawnFruits: async (treeId) => {
+  try {
+    
+    const { data, error } = await withTimeout(
+      supabase.rpc('spawn_tree_fruits', { p_tree_id: treeId })
+    );
+
+    if (error) throw error;
+    return data || 0;
+  } catch (error) {
+    console.error('Spawn error:', error);
+    return handleError('spawnFruits', error);
+  }
+},
+
 /**
- * Check if tree should spawn fruits
+ * Auto-spawn fruits based on time passed since last spawn
+ * Call this on login or tree view to catch up on missed spawns
  */
-shouldSpawnFruits: async (treeId) => {
+/**
+ * Auto-spawn fruits based on time passed since last spawn
+ * Call this on login or tree view to catch up on missed spawns
+ */
+autoSpawnFruitsOnLogin: async (treeId) => {
   try {
     if (!treeId) {
       throw new Error('Tree ID is required');
     }
 
-    // Get tree with last spawn time
+
+    // Get tree details - use maybeSingle() instead of single()
     const { data: tree, error: treeError } = await withTimeout(
       supabase
         .from('trees')
         .select('stage, last_fruit_spawn')
         .eq('id', treeId)
-        .single()
+        .maybeSingle()
     );
 
     if (treeError) throw treeError;
+    
+    // Tree doesn't exist
+    if (!tree) {
+      return { spawned: 0, cycles: 0, reason: 'tree_not_found' };
+    }
 
-    // Get spawn settings
+    // Get spawn settings - use maybeSingle() (already correct)
     const { data: settings, error: settingsError } = await withTimeout(
       supabase
-        .from('fruit_types')
-        .select('spawn_probability')
+        .from('fruit_spawn_settings')
+        .select('spawn_interval_hours, max_fruits_per_tree')
         .eq('tree_stage', tree.stage)
         .maybeSingle()
     );
 
     if (settingsError) throw settingsError;
 
-    // If no settings found for this stage, don't spawn
+    // No settings or interval is 0 = no spawning for this stage
     if (!settings || settings.spawn_interval_hours === 0) {
-      return false;
+      return { spawned: 0, cycles: 0, reason: 'no_settings' };
     }
 
     // Check current fruit count
-    const { count, error: countError } = await withTimeout(
+    const { count: currentCount, error: countError } = await withTimeout(
       supabase
         .from('tree_fruits')
         .select('*', { count: 'exact', head: true })
@@ -404,26 +420,179 @@ shouldSpawnFruits: async (treeId) => {
 
     if (countError) throw countError;
 
-    // Don't spawn if at max capacity
-    if (count >= settings.max_fruits_per_tree) {
-      return false;
+    // Already at max capacity
+    if (currentCount >= settings.max_fruits_per_tree) {
+      return { spawned: 0, cycles: 0, reason: 'max_capacity' };
     }
 
-    // ✅ Use last_fruit_spawn from tree table instead of querying tree_fruits
-    if (!tree.last_fruit_spawn) {
-      // Never spawned before - allow spawn
-      return true;
+    // Calculate cycles passed
+    const now = Date.now();
+    const lastSpawnTime = tree.last_fruit_spawn 
+      ? new Date(tree.last_fruit_spawn).getTime() 
+      : now - (settings.spawn_interval_hours * 60 * 60 * 1000); // If never spawned, assume 1 cycle ago
+
+    const millisPerCycle = settings.spawn_interval_hours * 60 * 60 * 1000;
+    const timePassed = now - lastSpawnTime;
+    const cyclesPassed = Math.floor(timePassed / millisPerCycle);
+
+    // No cycles have passed yet
+    if (cyclesPassed === 0) {
+      return { spawned: 0, cycles: 0, reason: 'no_cycles_passed' };
     }
 
-    // Check if enough time has passed since last spawn
-    const hoursSinceSpawn = 
-      (Date.now() - new Date(tree.last_fruit_spawn).getTime()) / (1000 * 60 * 60);
-    
-    return hoursSinceSpawn >= settings.spawn_interval_hours;
+    // Calculate how many fruits to spawn (can't exceed max)
+    const maxToSpawn = settings.max_fruits_per_tree - currentCount;
+    const cyclesToSpawn = Math.min(cyclesPassed, maxToSpawn);
+
+    if (cyclesToSpawn === 0) {
+      return { spawned: 0, cycles: cyclesPassed, reason: 'would_exceed_max' };
+    }
+
+    // Spawn fruits for each cycle
+    let totalSpawned = 0;
+    for (let i = 0; i < cyclesToSpawn; i++) {
+      try {
+        const spawnResult = await withTimeout(
+          supabase.rpc('spawn_tree_fruits', { p_tree_id: treeId })
+        );
+
+        if (spawnResult.error) {
+          console.error('Error spawning cycle', i + 1, ':', spawnResult.error);
+          break; // Stop spawning on error
+        }
+
+        totalSpawned += (spawnResult.data || 0);
+        
+        // Small delay between spawns to avoid rate limiting
+        if (i < cyclesToSpawn - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch (error) {
+        console.error('Failed to spawn cycle', i + 1, ':', error);
+        break;
+      }
+    }
+
+
+    return {
+      spawned: totalSpawned,
+      cycles: cyclesPassed,
+      cyclesProcessed: cyclesToSpawn,
+      currentCount: currentCount + totalSpawned,
+      maxCapacity: settings.max_fruits_per_tree
+    };
   } catch (error) {
-    return handleError('shouldSpawnFruits', error);
+    // Don't throw error, just return empty result
+    return { spawned: 0, cycles: 0, error: error.message };
   }
 },
+
+  /**
+   * Check if tree should spawn fruits
+   * FIXED: Better table name handling
+   */
+  shouldSpawnFruits: async (treeId) => {
+    try {
+      if (!treeId) {
+        throw new Error('Tree ID is required');
+      }
+
+      // Get tree with last spawn time
+      const { data: tree, error: treeError } = await withTimeout(
+        supabase
+          .from('trees')
+          .select('stage, last_fruit_spawn')
+          .eq('id', treeId)
+          .single()
+      );
+
+      if (treeError) throw treeError;
+
+      // Try both table names for spawn settings
+      let settings = null;
+      let settingsError = null;
+
+      // Try fruit_spawn_settings first (from Edge Function)
+      const { data: settings1, error: error1 } = await withTimeout(
+        supabase
+          .from('fruit_spawn_settings')
+          .select('spawn_interval_hours, max_fruits_per_tree, spawn_probability')
+          .eq('tree_stage', tree.stage)
+          .maybeSingle()
+      );
+
+      if (!error1 && settings1) {
+        settings = settings1;
+      } else {
+        // Fallback to fruit_types
+        const { data: settings2, error: error2 } = await withTimeout(
+          supabase
+            .from('fruit_types')
+            .select('spawn_interval_hours, max_fruits_per_tree, spawn_probability')
+            .eq('tree_stage', tree.stage)
+            .maybeSingle()
+        );
+
+        if (!error2 && settings2) {
+          settings = settings2;
+        } else {
+          settingsError = error2;
+        }
+      }
+
+      if (settingsError) throw settingsError;
+
+      // If no settings found for this stage, don't spawn
+      if (!settings || settings.spawn_interval_hours === 0) {
+        return false;
+      }
+
+      // Check current fruit count - try both table names
+      let count = 0;
+      const { count: count1, error: countError1 } = await withTimeout(
+        supabase
+          .from('tree_fruits')
+          .select('*', { count: 'exact', head: true })
+          .eq('tree_id', treeId)
+          .eq('is_collected', false)
+      );
+
+      if (countError1) {
+        // Try alternate table name
+        const { count: count2, error: countError2 } = await withTimeout(
+          supabase
+            .from('fruits')
+            .select('*', { count: 'exact', head: true })
+            .eq('tree_id', treeId)
+            .eq('status', 'on_tree')
+        );
+
+        if (countError2) throw countError2;
+        count = count2 || 0;
+      } else {
+        count = count1 || 0;
+      }
+
+      // Don't spawn if at max capacity
+      if (count >= settings.max_fruits_per_tree) {
+        return false;
+      }
+
+      // Check if enough time has passed
+      if (!tree.last_fruit_spawn) {
+        return true;
+      }
+
+      const hoursSinceSpawn = 
+        (Date.now() - new Date(tree.last_fruit_spawn).getTime()) / (1000 * 60 * 60);
+  
+      
+      return hoursSinceSpawn >= settings.spawn_interval_hours;
+    } catch (error) {
+      console.error('Error in shouldSpawnFruits:', error);
+      return handleError('shouldSpawnFruits', error);
+    }
+  },
 
   /**
    * Get spawn settings for a tree

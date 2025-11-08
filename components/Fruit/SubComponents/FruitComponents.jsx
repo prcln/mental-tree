@@ -1,7 +1,7 @@
 import { X, TrendingUp, Clock, Search } from 'lucide-react';
 import { TABS, SEARCH_FILTERS, EXPIRATION_OPTIONS, FRUIT_TYPES, FRUIT_EMOJI_MAP, REQUEST_TIMEOUT, AUTO_REFRESH_INTERVAL } from '../constants.js'
 
-import { getTimeRemaining, getTradeUsername, getFruitEmoji } from '../fruitUtil.js';
+import { getTimeRemaining, getTradeUsername, getFruitEmoji } from '../fruitUtil.jsx';
 
 const FruitBadge = ({ name, quantity }) => (
   <div className="fruit-badge">
