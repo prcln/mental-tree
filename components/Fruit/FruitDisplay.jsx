@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { fruitService } from '../../services/fruitService';
 import { fruitEmojis } from '../../constants/fruits';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext/AuthContext';
 
 const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
   const [fruits, setFruits] = useState([]);
   const [collecting, setCollecting] = useState(null);
   const { t } = useLanguage();
+  
+  const { fruitSpawnTrigger } = useAuth();
 
   // Check interval ref
   const spawnCheckIntervalRef = useRef(null);
@@ -31,14 +34,24 @@ const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
 
   }, [treeId]);
 
-  const loadFruits = async () => {
+  const loadFruit = useCallback(async () => {
+    if (!treeId) return;
     try {
       const data = await fruitService.getTreeFruits(treeId);
       setFruits(data);
     } catch (error) {
       console.error('Error loading fruits:', error);
     }
-  };
+  }, [treeId]);
+
+    // Effect to reload fruits when spawn trigger changes
+  useEffect(() => {
+    if (fruitSpawnTrigger > 0) {
+      console.log('[MOOD_TREE] Fruit spawn detected, reloading...');
+      loadFruits();
+      checkSpawnTimer(); // Also update the spawn timer
+    }
+  }, [fruitSpawnTrigger, loadFruits, checkSpawnTimer]);
 
   const checkAndSpawnFruits = async () => {
     try {

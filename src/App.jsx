@@ -13,6 +13,8 @@ import { UserReportPage } from '../pages/UserPage/UserReportPage';
 import MainLayout from '../components/Layout/MainLayout';
 import CommunityGarden from '../pages/CommunityGardenPage';
 import QuizConfigEditor from '../pages/QuizPage/QuizEditor';
+import UserStatsPanel from '../components/AdminComponent/UserStatsPanel';
+import AdminDashboard from '../components/AdminComponent/AdminDashboard';
 
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<TreePage />} />
+              <Route path="/user-stats" element={<UserStatsPanel />} />
+              <Route path="/admin/analytics" element={<AdminDashboard />} />
               <Route path="/tree" element={<TreePage />} />
               <Route path="/report/:treeId" element={<UserReportPage />} />
               <Route path="/garden" element={<CommunityGarden />} />
