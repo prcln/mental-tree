@@ -303,6 +303,7 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
         lastFruitSpawn={treeData.last_fruit_spawn}
       />
 
+      {/* Tree Controls */}
       <div className="mood-tree-controls">
         {isOwner && (
           <>

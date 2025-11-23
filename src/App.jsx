@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '../contexts/AuthContext/AuthContext';
+import { AuthProvider } from '../contexts/AuthContext/AuthProvider';
 import { LanguageProvider } from '../contexts/LanguageContext/LanguageContext';
 import PositionFinder from '../components/PosFinder/PosFinder';
 

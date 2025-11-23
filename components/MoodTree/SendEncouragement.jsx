@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './SendEncouragement.css';
-import { useAuth } from '../../contexts/AuthContext/AuthContext';
+
 
 // List of encouraging words to check for
 const ENCOURAGING_WORDS = [

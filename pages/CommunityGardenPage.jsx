@@ -6,7 +6,7 @@ import PaginationControls from '../components/Buttons/PaginationControls.jsx';
 import { messageService } from '../services/messageService.js';
 import { realtimeService } from '../services/realtimeService.js';
 import { useLanguage } from '../contexts/LanguageContext/LanguageContext.jsx';
-import { useAuth } from '../contexts/AuthContext/AuthContext.jsx';
+import { useAuth } from '../contexts/AuthContext/useAuth.js';
 import { Loading } from '../components/Others/Loading.jsx';
 import { usePagination, positionPresets } from '../utils/usePagination.jsx';
 

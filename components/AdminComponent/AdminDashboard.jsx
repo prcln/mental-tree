@@ -6,7 +6,7 @@ import {
 import { Download, TrendingUp, Users, Activity, Award } from 'lucide-react';
 import { adminAnalyticsService } from '../../services/adminAnalyticsService';
 import './AdminDashboard.css';
-import { useAuth } from '../../contexts/AuthContext/AuthContext';
+import { useAuth } from '../../contexts/AuthContext/useAuth';
 import { isAdmin } from '../../utils/adminCheck';
 import { useNavigate } from 'react-router-dom';
 

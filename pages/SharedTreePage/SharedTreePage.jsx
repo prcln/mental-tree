@@ -4,7 +4,7 @@ import { Home, Lock } from 'lucide-react';
 import MoodTree from '../MoodTree';
 
 import './SharedTreePage.css';
-import { useAuth } from '../../contexts/AuthContext/AuthContext';
+import { useAuth } from '../../contexts/AuthContext/useAuth';
 import { treeService } from '../../services/treeService';
 import { userService } from '../../services/userService';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';

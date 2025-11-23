@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext/AuthContext';
+import { useAuth } from '../../contexts/AuthContext/useAuth';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
 import './Header.css';
