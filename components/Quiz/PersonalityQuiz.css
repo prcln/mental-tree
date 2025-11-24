@@ -18,7 +18,7 @@
 /* Stage Transitions */
 /* Stage 1: IN - Fade in smoothly */
 .quiz-container.stage-in {
-  animation: backgroundFadeIn 2.5s ease-out;
+  animation: backgroundFadeIn 2s ease-out;
 }
 
 @keyframes backgroundFadeIn {
@@ -34,14 +34,14 @@
 
 /* Stage 2: ANSWER - Dim the background */
 .quiz-container.dimmed {
-  filter: brightness(0.4) saturate(0.7);
+  filter: brightness(0.3) saturate(0.8);
 }
 
 /* Stage 3: OUT - Fade out */
 .quiz-container.stage-out {
   opacity: 0.5;
   filter: blur(5px);
-  transition: opacity 0.4s ease, filter 0.4s ease;
+  transition: opacity 0.5s ease, filter 0.5s ease;
 }
 
 .quiz-card {
@@ -56,7 +56,7 @@
 
 /* Transparent card for questions */
 .quiz-card.transparent {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, .85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -65,7 +65,7 @@
 
 /* Card transitions during stages */
 .quiz-card.stage-in {
-  animation: cardSlideIn 1.5s ease-out;
+  animation: cardSlideIn 0.8s ease-out;
 }
 
 @keyframes cardSlideIn {
@@ -154,7 +154,7 @@
   width: 100%;
   padding: 20px;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(5px);
   border: 3px solid rgba(224, 224, 224, 0.6);
   border-radius: 16px;

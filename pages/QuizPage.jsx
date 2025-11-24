@@ -8,7 +8,7 @@ const QuizPage = () => {
   const navigate = useNavigate();
   const [quizResult, setQuizResult] = useState(null);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
-  const [showQuizCard, setShowQuizCard] = useState(true);
+  const [showQuestionCard, setShowQuestionCard] = useState(true);
 
   useEffect(() => {
     // Check if user has permission to access quiz
@@ -40,8 +40,8 @@ const QuizPage = () => {
     setAnimationsEnabled(!animationsEnabled);
   };
 
-  const toggleQuizCard = () => {
-    setShowQuizCard(!showQuizCard);
+  const toggleQuestionCard = () => {
+    setShowQuestionCard(!showQuestionCard);
   };
 
   // Show result page
@@ -53,24 +53,24 @@ const QuizPage = () => {
     <div className={`quiz-page ${!animationsEnabled ? 'no-animations' : ''}`}>
       <div className="quiz-controls">
         <button 
+          onClick={toggleQuestionCard}
+          className="control-btn toggle-question-btn"
+          title={showQuestionCard ? "Hide Question" : "Show Question"}
+        >
+          {showQuestionCard ? "🙈 Hide" : "👁️ Show"}
+        </button>
+        <button 
           onClick={toggleAnimations}
           className="control-btn animation-toggle-btn"
           title={animationsEnabled ? "Disable animations" : "Enable animations"}
         >
           {animationsEnabled ? "🎬" : "⏸️"}
         </button>
-        <button 
-          onClick={toggleQuizCard}
-          className="control-btn card-toggle-btn"
-          title={showQuizCard ? "Hide quiz card (view background)" : "Show quiz card"}
-        >
-          {showQuizCard ? "👁️" : "🖼️"}
-        </button>
       </div>
       <PersonalityQuiz 
         onComplete={handleQuizComplete} 
         animationsEnabled={animationsEnabled}
-        showCard={showQuizCard}
+        showCard={showQuestionCard}
       />
     </div>
   );

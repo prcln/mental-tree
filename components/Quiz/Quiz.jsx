@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './PersonalityQuiz.css';
 import { QUIZ_CONFIG } from '../../constants/QUIZ_CONFIG';
 import StartPortal from './StartPortal';
@@ -15,7 +15,7 @@ import question8Bg from '../../assets/backgrounds/question8.jpg';
 import question9Bg from '../../assets/backgrounds/question9.jpg';
 import question10Bg from '../../assets/backgrounds/question10.jpg';
 
-const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true }) => {
+const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true, hideQuestionCard }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [scores, setScores] = useState({ bold: 0, balanced: 0, cautious: 0 });
@@ -27,8 +27,6 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
   const [backgroundDim, setBackgroundDim] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showQuizCard, setShowQuizCard] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const questionInitialized = useRef(false);
   const [showWhiteOverlay, setShowWhiteOverlay] = useState(false);
   
   const { questions, fruitTypes, backgrounds } = QUIZ_CONFIG;
@@ -75,12 +73,12 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       // Show card after delay (or immediately if animations disabled)
       const cardTimer = setTimeout(() => {
         setShowQuizCard(true);
-      }, animationsEnabled ? 2500 : 0);
+      }, animationsEnabled ? 1300 : 100);
 
       const inTimer = setTimeout(() => {
         setQuestionStage('answer');
         setIsTransitioning(false);
-      }, animationsEnabled ? 1000 : 0);
+      }, animationsEnabled ? 1000 : 100);
 
       return () => {
         clearTimeout(cardTimer);
@@ -101,19 +99,44 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
   };
 
   const handleAnswer = (option) => {
-    // Stage 2: Dim the background when answer is clicked
-    setQuestionStage('answer');
-    setBackgroundDim(true);
-    setIsTransitioning(true);
-    
     const newScores = { ...scores };
     Object.entries(option.points).forEach(([type, points]) => {
       newScores[type] = (newScores[type] || 0) + points;
     });
     setScores(newScores);
 
-    const dimDelay = animationsEnabled ? 700 : 0;
-    const transitionDelay = animationsEnabled ? 500 : 0;
+    if (!animationsEnabled) {
+      // No animations - instant transition
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        const resultType = calculateResult(newScores);
+        const totalScore = newScores.bold + newScores.balanced + newScores.cautious;
+        
+        const quizResult = {
+          fruitType: resultType,
+          fruitInfo: fruitTypes[resultType],
+          scores: newScores,
+          totalScore
+        };
+        
+        setResult(quizResult);
+        setShowResults(true);
+        
+        if (onComplete) {
+          onComplete(quizResult);
+        }
+      }
+      return;
+    }
+
+    // Stage 2: Dim the background when answer is clicked
+    setQuestionStage('answer');
+    setBackgroundDim(true);
+    setIsTransitioning(true);
+
+    const dimDelay = 400;
+    const transitionDelay = 300;
 
     // Wait a moment while dimmed, then transition out
     setTimeout(() => {
@@ -122,11 +145,14 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       
       // Stage 3: Transition out to next question
       setTimeout(() => {
-        setShowWhiteOverlay(false);
         if (currentQuestion < questions.length - 1) {
-          setCurrentQuestion(currentQuestion + 1);
-          setBackgroundDim(false);
-        } else {
+        setCurrentQuestion(currentQuestion + 1); // ← Move this here
+      }
+
+        setShowWhiteOverlay(false);
+        setBackgroundDim(false);
+
+        if (currentQuestion >= questions.length - 1) {
           const resultType = calculateResult(newScores);
           const totalScore = newScores.bold + newScores.balanced + newScores.cautious;
           
@@ -152,6 +178,11 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
+      if (!animationsEnabled) {
+        setCurrentQuestion(currentQuestion - 1);
+        return;
+      }
+      
       setQuestionStage('out');
       setIsTransitioning(true);
       setTimeout(() => {
@@ -201,11 +232,11 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
 
   return (
     <div 
-      className={`quiz-container stage-${questionStage} ${backgroundDim ? 'dimmed' : ''}`}
+      className={`quiz-container stage-${questionStage} ${backgroundDim ? 'dimmed' : ''} ${!animationsEnabled ? 'no-animation' : ''}`}
       style={getBackgroundStyle()}
     >
       {/* White overlay with z-index 500 */}
-      {showWhiteOverlay && (
+      {showWhiteOverlay && animationsEnabled && (
         <div 
           style={{
             position: 'fixed',
@@ -217,7 +248,7 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       )}
 
       <div 
-        className={`quiz-card transparent ${showQuizCard ? 'show-card' : 'hide-card'} stage-${questionStage} ${isTransitioning ? 'transitioning' : ''} ${!showCard ? 'force-hidden' : ''}`}
+        className={`quiz-card transparent ${showQuizCard ? 'show-card' : 'hide-card'} stage-${questionStage} ${isTransitioning ? 'transitioning' : ''} ${!showCard ? 'force-hidden' : ''} ${hideQuestionCard ? 'force-hidden' : ''}`}
       >
         <div className="quiz-header">
           <div className="progress-info">
