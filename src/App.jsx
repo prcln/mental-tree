@@ -3,10 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext/AuthProvider';
 import { LanguageProvider } from '../contexts/LanguageContext/LanguageContext';
 import PositionFinder from '../components/PosFinder/PosFinder';
-
 import ProtectedRoute from '../components/ProtectedRoute';
 import AuthForm from '../components/AuthComponent/AuthComponent';
 import TreePage from '../pages/TreePage/TreePage';
+import QuizPage from '../pages/QuizPage';
 import SharedTreePage from '../pages/SharedTreePage/SharedTreePage';
 import './App.css';
 import { UserReportPage } from '../pages/UserPage/UserReportPage';
@@ -24,6 +24,8 @@ function App() {
         <Routes>
           {/* Login route */}
           <Route path="/login" element={<AuthForm />} />
+
+          <Route path="/quiz" element={<QuizPage />} />
           
           <Route element={<MainLayout />}>
             {/* Public shared tree route - no auth required */}

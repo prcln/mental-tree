@@ -1,0 +1,49 @@
+.quiz-page {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.animation-toggle-btn {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1001;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.animation-toggle-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.animation-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* Disable all animations when toggle is off */
+.quiz-page.no-animations * {
+  animation-duration: 0.01s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0.01s !important;
+  transition-delay: 0s !important;
+}
+
+@media (max-width: 768px) {
+  .animation-toggle-btn {
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem;
+    font-size: 1.25rem;
+  }
+}

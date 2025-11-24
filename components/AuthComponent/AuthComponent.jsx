@@ -14,7 +14,7 @@ const AuthForm = () => {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { t, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
 
   const handleSubmit = async () => {
     // Validation

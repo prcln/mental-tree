@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sun, Cloud, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import MessageDecoration from '../MessageComponents/MessageDecoration';
 import './TreeVisualization.css';
 import { fruitEmojis } from '../../constants/fruits';
 import { pointsUntilNextStage } from '../../services/stageHelper';
 import { fruitService } from '../../services/fruitService';
-import { positionsFruit, positionsTree } from '../../constants/tree';
+import { positionsTree } from '../../constants/tree';
 
 import seedImg from '../../src/assets/tree_stages/seed.svg';
 import sproutImg from '../../src/assets/tree_stages/sprout.svg';
@@ -29,11 +29,14 @@ const getMessagePositions = (stage) => {
   return positionsTree[stage] || [];
 };
 
-const TreeVisualization = ({ currentStage, messages, moodScore, treeType, currentUserId, treeId, fruits: externalFruits, onFruitCollect }) => {
+const TreeVisualization = ({ currentStage, messages, moodScore, treeType, currentUserId, fruits: externalFruits, onFruitCollect }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [fruits, setFruits] = useState([]);
   const [collecting, setCollecting] = useState(null);
   const [collectionEffect, setCollectionEffect] = useState(null);
+  
+  // Track which fruit IDs we've already assigned positions to
+  const assignedPositionsRef = useRef(new Map());
 
   const messagePositions = getMessagePositions(currentStage);
   const StageImage = stageImages[currentStage];
@@ -51,21 +54,36 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
   const visibleMessages = currentMessages.slice(0, messagePositions.length);
   const currentPositions = messagePositions.slice(0, visibleMessages.length);
 
-  // Sync external fruits with local state
+  // Sync external fruits with local state - preserve existing positions
   useEffect(() => {
     if (externalFruits) {
-      // Assign random positions if they don't exist
       const fruitsWithPositions = externalFruits.map(fruit => {
-        if (!fruit.position_x || !fruit.position_y) {
-          return {
-            ...fruit,
-            position_x: 20 + Math.floor(Math.random() * 60),
-            position_y: 10 + Math.floor(Math.random() * 50)
-          };
+        // Check if we already have a position for this fruit ID
+        if (assignedPositionsRef.current.has(fruit.id)) {
+          return assignedPositionsRef.current.get(fruit.id);
         }
-        return fruit;
+        
+        // Use database position or generate new one only for new fruits
+        const fruitWithPosition = {
+          ...fruit,
+          position_x: fruit.position_x || (20 + Math.floor(Math.random() * 60)),
+          position_y: fruit.position_y || (10 + Math.floor(Math.random() * 50))
+        };
+        
+        // Store this position for future reference
+        assignedPositionsRef.current.set(fruit.id, fruitWithPosition);
+        return fruitWithPosition;
       });
+      
       setFruits(fruitsWithPositions);
+      
+      // Clean up positions for fruits that no longer exist
+      const currentFruitIds = new Set(externalFruits.map(f => f.id));
+      for (const [id] of assignedPositionsRef.current) {
+        if (!currentFruitIds.has(id)) {
+          assignedPositionsRef.current.delete(id);
+        }
+      }
     }
   }, [externalFruits]);
 
@@ -95,6 +113,9 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
           const newFruits = prevFruits.filter(f => f.id !== fruitId);
           return newFruits;
         });
+        
+        // Clean up the position cache for this fruit
+        assignedPositionsRef.current.delete(fruitId);
         
         // Notify parent component with the right structure
         if (onFruitCollect) {
@@ -163,10 +184,10 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
           {fruits.length > 0 && currentStage !== 'seed' && (
             <div className="fruits-layer">
               {fruits.map((fruit, index) => {
-                // Use stored position from database or fallback to generated one
+                // Use the stored position (already assigned in state)
                 const position = {
-                  x: fruit.position_x || (20 + Math.floor(Math.random() * 60)),
-                  y: fruit.position_y || (10 + Math.floor(Math.random() * 50))
+                  x: fruit.position_x,
+                  y: fruit.position_y
                 };
                 
                 return (

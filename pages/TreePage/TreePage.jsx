@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext/useAuth';
 
-
 import MoodTree from '../MoodTree';
-import PersonalityQuiz from '../../components/Quiz/Quiz';
 import QuizResult from '../../components/Quiz/QuizResult';
 import { Loading } from '../../components/Others/Loading';
 
@@ -23,10 +21,8 @@ const TreePage = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showQuiz, setShowQuiz] = useState(false);
   const [quizResult, setQuizResult] = useState(null);
   const [treeLoaded, setTreeLoaded] = useState(false);
-  const [isRetakingQuiz, setIsRetakingQuiz] = useState(false);
 
   const { t } = useLanguage();
 
@@ -35,6 +31,15 @@ const TreePage = () => {
       initializeUserData(user.id);
     }
   }, [user, treeLoaded]);
+
+  // Check if returning from quiz with result
+  useEffect(() => {
+    const storedResult = sessionStorage.getItem('quizResult');
+    if (storedResult) {
+      setQuizResult(JSON.parse(storedResult));
+      sessionStorage.removeItem('quizResult');
+    }
+  }, []);
 
   const initializeUserData = async (currentUserId) => {
     try {
@@ -65,14 +70,18 @@ const TreePage = () => {
         
         // Check if user has completed the quiz
         if (!tree.completed_quiz) {
-          setShowQuiz(true);
+          // Navigate to quiz page for first time users
+          sessionStorage.setItem('quizAccess', 'firstTime');
+          navigate('/quiz');
         }
       } else {
         // Create a new tree for the user with their seed type
         const newTree = await treeService.createTree(currentUserId, profile.seed_type);
         setCurrentTreeId(newTree.id);
         setCurrentTree(newTree);
-        setShowQuiz(true);
+        // Navigate to quiz page for new users
+        sessionStorage.setItem('quizAccess', 'firstTime');
+        navigate('/quiz');
       }
       
       setTreeLoaded(true);
@@ -84,14 +93,12 @@ const TreePage = () => {
     }
   };
 
-  const handleQuizComplete = (result) => {
-    setQuizResult(result);
-  };
-
   const handleStartTree = async () => {
     try {
-      if (currentTreeId) {
-        if (isRetakingQuiz) {
+      if (currentTreeId && quizResult) {
+        const isRetaking = sessionStorage.getItem('isRetakingQuiz') === 'true';
+        
+        if (isRetaking) {
           // Reset tree with new tree type
           const updatedTree = await treeService.resetTree(currentTreeId, quizResult.treeType);
           setCurrentTree(updatedTree);
@@ -101,7 +108,7 @@ const TreePage = () => {
             seed_type: quizResult.treeType 
           });
           
-          setIsRetakingQuiz(false);
+          sessionStorage.removeItem('isRetakingQuiz');
         } else {
           // First time completing quiz
           const updatedTree = await treeService.markQuizCompleted(currentTreeId, quizResult.treeType);
@@ -114,31 +121,22 @@ const TreePage = () => {
         }
       }
       setQuizResult(null);
-      setShowQuiz(false);
     } catch (err) {
       console.error('Error completing quiz:', err);
     }
   };
 
   const handleRetakeQuiz = () => {
-    setIsRetakingQuiz(true);
-    setShowQuiz(true);
+    // Set flag for retaking quiz
+    sessionStorage.setItem('quizAccess', 'retake');
+    sessionStorage.setItem('isRetakingQuiz', 'true');
+    navigate('/quiz');
   };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
 
   if (loading) {
     return (
       <div>
-      <Loading message={t('common.loading')} size="full" />
+        <Loading message={t('common.loading')} size="full" />
       </div>
     );
   }
@@ -154,18 +152,13 @@ const TreePage = () => {
     );
   }
 
-  // Show quiz
-  if (showQuiz && !quizResult) {
-    return <PersonalityQuiz onComplete={handleQuizComplete} />;
-  }
-
   // Show quiz result
   if (quizResult) {
     return (
       <QuizResult 
         result={quizResult} 
         onContinue={handleStartTree}
-        isRetaking={isRetakingQuiz}
+        isRetaking={sessionStorage.getItem('isRetakingQuiz') === 'true'}
       />
     );
   }
@@ -183,16 +176,16 @@ const TreePage = () => {
 
   return (
     <div className='page-with-header'>
-    <div className="tree-page">
-      <MoodTree 
-        treeId={currentTreeId}
-        currentUserId={currentUserId}
-        isOwner={true}
-        treeData={currentTree}
-        onTreeUpdate={setCurrentTree}
-        onRetakeQuiz={handleRetakeQuiz}
-      />
-    </div>
+      <div className="tree-page">
+        <MoodTree 
+          treeId={currentTreeId}
+          currentUserId={currentUserId}
+          isOwner={true}
+          treeData={currentTree}
+          onTreeUpdate={setCurrentTree}
+          onRetakeQuiz={handleRetakeQuiz}
+        />
+      </div>
     </div>
   );
 };

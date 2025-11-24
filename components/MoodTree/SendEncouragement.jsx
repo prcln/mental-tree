@@ -3,7 +3,7 @@ import './SendEncouragement.css';
 
 
 // List of encouraging words to check for
-const ENCOURAGING_WORDS = [
+/*const ENCOURAGING_WORDS = [
   // Positive emotions
   'love', 'hope', 'joy', 'happy', 'proud', 'grateful', 'blessed', 'wonderful',
   'amazing', 'beautiful', 'fantastic', 'awesome', 'great', 'excellent', 'brilliant',
@@ -27,15 +27,19 @@ const ENCOURAGING_WORDS = [
   // Emojis count as encouraging too
   '❤️', '💪', '🌟', '✨', '🌈', '☀️', '🌸', '🌺', '🌻', '🦋', '💫', '⭐'
 ];
+*/
 
 // Function to check if message contains encouraging words
 const isEncouragingMessage = (message) => {
+  return true;
+  /*
   if (!message || message.trim().length === 0) return false;
   
   const lowerMessage = message.toLowerCase();
   
   // Check if any encouraging word is in the message
   return ENCOURAGING_WORDS.some(word => lowerMessage.includes(word.toLowerCase()));
+  */
 };
 
 const SendEncouragement = ({ currentUserId, onSubmit, onClose, isCommunityGarden = false }) => {

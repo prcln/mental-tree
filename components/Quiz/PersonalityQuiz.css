@@ -12,7 +12,7 @@
   padding: 20px;
   z-index: 1000;
   overflow-y: auto;
-  transition: filter 0.8s ease, opacity 0.6s ease;
+  transition: filter 0.6s ease, opacity 0.4s ease;
 }
 
 /* Stage Transitions */
@@ -41,7 +41,7 @@
 .quiz-container.stage-out {
   opacity: 0.5;
   filter: blur(5px);
-  transition: opacity 0.6s ease, filter 0.6s ease;
+  transition: opacity 0.4s ease, filter 0.4s ease;
 }
 
 .quiz-card {
@@ -65,7 +65,7 @@
 
 /* Card transitions during stages */
 .quiz-card.stage-in {
-  animation: cardSlideIn 2s ease-out;
+  animation: cardSlideIn 1.5s ease-out;
 }
 
 @keyframes cardSlideIn {
@@ -877,3 +877,16 @@
   animation: cardSlideIn 1.5s ease-out forwards;
 }
 
+/* Add this to your existing PersonalityQuiz.css file */
+
+/* Force hide the quiz card when user wants to view background */
+.quiz-card.force-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.95) !important;
+}
+
+/* Smooth transition for hiding/showing card */
+.quiz-card {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}

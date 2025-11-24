@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './PersonalityQuiz.css';
 import { QUIZ_CONFIG } from '../../constants/QUIZ_CONFIG';
+import StartPortal from './StartPortal';
 
 // Import your background images here
-import startBg from '../../assets/backgrounds/start.jpg';
 import question1Bg from '../../assets/backgrounds/question1.jpg';
 import question2Bg from '../../assets/backgrounds/question2.jpg';
 import question3Bg from '../../assets/backgrounds/question3.jpg';
@@ -15,7 +15,7 @@ import question8Bg from '../../assets/backgrounds/question8.jpg';
 import question9Bg from '../../assets/backgrounds/question9.jpg';
 import question10Bg from '../../assets/backgrounds/question10.jpg';
 
-const PersonalityQuiz = () => {
+const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [scores, setScores] = useState({ bold: 0, balanced: 0, cautious: 0 });
@@ -27,12 +27,14 @@ const PersonalityQuiz = () => {
   const [backgroundDim, setBackgroundDim] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showQuizCard, setShowQuizCard] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const questionInitialized = useRef(false);
+  const [showWhiteOverlay, setShowWhiteOverlay] = useState(false);
   
   const { questions, fruitTypes, backgrounds } = QUIZ_CONFIG;
 
   // Map of background images
   const backgroundImages = {
-    start: startBg,
     question1: question1Bg,
     question2: question2Bg,
     question3: question3Bg,
@@ -45,31 +47,47 @@ const PersonalityQuiz = () => {
     question10: question10Bg,
   };
 
+  // Preload all background images to eliminate loading jitter
+  useEffect(() => {
+    Object.values(backgroundImages).forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   useEffect(() => {
     if (hasStarted && !showResults) {
-      // Start with 'in' stage
+      // For first question, show card immediately
+      if (currentQuestion === 0) {
+        setShowQuizCard(true);
+        setQuestionStage('answer');
+        setBackgroundDim(false);
+        setIsTransitioning(false);
+        return;
+      }
+
+      // For subsequent questions, animate in (or skip animation if disabled)
       setShowQuizCard(false);
       setQuestionStage('in');
       setBackgroundDim(false);
       setIsTransitioning(true);
 
-      // After 2-3 seconds, move to 'answer' stage
-      // Show card after delay
+      // Show card after delay (or immediately if animations disabled)
       const cardTimer = setTimeout(() => {
         setShowQuizCard(true);
-      }, 3500); // Card appears after 2 seconds
+      }, animationsEnabled ? 2500 : 0);
 
       const inTimer = setTimeout(() => {
         setQuestionStage('answer');
         setIsTransitioning(false);
-      }, 1500);
+      }, animationsEnabled ? 1000 : 0);
 
       return () => {
-      clearTimeout(cardTimer);
-      clearTimeout(inTimer);
-    };
+        clearTimeout(cardTimer);
+        clearTimeout(inTimer);
+      };
     }
-  }, [currentQuestion, hasStarted, showResults]);
+  }, [currentQuestion, showResults, hasStarted, animationsEnabled]);
 
   const calculateResult = (finalScores) => {
     const totalScore = finalScores.bold + finalScores.balanced + finalScores.cautious;
@@ -94,12 +112,17 @@ const PersonalityQuiz = () => {
     });
     setScores(newScores);
 
+    const dimDelay = animationsEnabled ? 700 : 0;
+    const transitionDelay = animationsEnabled ? 500 : 0;
+
     // Wait a moment while dimmed, then transition out
     setTimeout(() => {
       setQuestionStage('out');
+      setShowWhiteOverlay(true);
       
       // Stage 3: Transition out to next question
       setTimeout(() => {
+        setShowWhiteOverlay(false);
         if (currentQuestion < questions.length - 1) {
           setCurrentQuestion(currentQuestion + 1);
           setBackgroundDim(false);
@@ -107,17 +130,24 @@ const PersonalityQuiz = () => {
           const resultType = calculateResult(newScores);
           const totalScore = newScores.bold + newScores.balanced + newScores.cautious;
           
-          setResult({
+          const quizResult = {
             fruitType: resultType,
             fruitInfo: fruitTypes[resultType],
             scores: newScores,
             totalScore
-          });
+          };
+          
+          setResult(quizResult);
           setShowResults(true);
+          
+          // Call onComplete callback if provided
+          if (onComplete) {
+            onComplete(quizResult);
+          }
         }
         setIsTransitioning(false);
-      }, 600);
-    }, 800);
+      }, transitionDelay);
+    }, dimDelay);
   };
 
   const handlePrevious = () => {
@@ -135,154 +165,34 @@ const PersonalityQuiz = () => {
     setHasStarted(true);
   };
 
-  const handleRestart = () => {
-    setHasStarted(false);
-    setCurrentQuestion(0);
-    setScores({ bold: 0, balanced: 0, cautious: 0 });
-    setShowResults(false);
-    setResult(null);
-    setQuestionStage('in');
-    setBackgroundDim(false);
-  };
-
   const getCurrentBackground = () => {
     if (showResults) {
       return backgrounds?.default || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-    }
-    if (!hasStarted) {
-      return `url(${backgroundImages.start})`;
     }
     // Get the background image for the current question
     const questionKey = `question${currentQuestion + 1}`;
     return `url(${backgroundImages[questionKey]})`;
   };
 
+  const getBackgroundStyle = () => {
+    return {
+      backgroundImage: getCurrentBackground(),
+      backgroundSize: 'auto 100vh',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      backgroundAttachment: 'fixed'
+    };
+  };
+
   // Start Page
   if (!hasStarted) {
-    return (
-      <div className="quiz-container" 
-        style={{ 
-          backgroundImage: getCurrentBackground(), 
-          backgroundSize: 'auto 100vh', 
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-        <div className="quiz-card start-page">
-          <div className="start-hero-image">
-            <div className="image-placeholder">
-              🍊🍓🍇
-              <span className="placeholder-text">Welcome to Fruitville</span>
-            </div>
-          </div>
-
-          <div className="start-content">
-            <h1 className="start-title">
-              Discover Your Fruit Personality
-            </h1>
-            
-            <p className="start-description">
-              Step through the mysterious portal into Fruitville! 
-              Journey through floating orchards and discover which fruit reflects your true essence.
-            </p>
-
-            <div className="start-features">
-              <div className="feature-item">
-                <div className="feature-image-placeholder">
-                  <span className="feature-emoji">✨</span>
-                </div>
-                <h3>Magical Journey</h3>
-                <p>{questions.length} enchanted questions</p>
-              </div>
-              
-              <div className="feature-item">
-                <div className="feature-image-placeholder">
-                  <span className="feature-emoji">🍑</span>
-                </div>
-                <h3>Your Fruit Self</h3>
-                <p>Discover your personality</p>
-              </div>
-              
-              <div className="feature-item">
-                <div className="feature-image-placeholder">
-                  <span className="feature-emoji">🌈</span>
-                </div>
-                <h3>Unique Results</h3>
-                <p>Personalized insights</p>
-              </div>
-            </div>
-
-            <button onClick={handleStart} className="btn-start">
-              Enter the Portal
-              <span className="btn-arrow">→</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <StartPortal onStart={handleStart} questionCount={questions.length} />;
   }
 
-  // Results Page
+  // Results Page - No longer shown here, handled by QuizPage
   if (showResults && result) {
-    return (
-      <div className="quiz-container" 
-        style={{ 
-          backgroundImage: getCurrentBackground(), 
-          backgroundSize: 'auto 100vh', 
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-        <div className="quiz-card results-page">
-          <div className="results-header">
-            <div className="results-emoji-large">{result.fruitInfo.emoji}</div>
-            <h1 className="results-title">You are...</h1>
-            <h2 className="results-fruit-name">{result.fruitInfo.name}</h2>
-            <p className="results-description">{result.fruitInfo.description}</p>
-          </div>
-
-          <div className="results-score">
-            <h3>Your Score: {result.totalScore}</h3>
-            <div className="score-breakdown">
-              <div className="score-item">
-                <span className="score-label">Bold</span>
-                <div className="score-bar">
-                  <div className="score-fill bold" style={{ width: `${(result.scores.bold / result.totalScore) * 100}%` }}></div>
-                </div>
-                <span className="score-value">{result.scores.bold}</span>
-              </div>
-              <div className="score-item">
-                <span className="score-label">Balanced</span>
-                <div className="score-bar">
-                  <div className="score-fill balanced" style={{ width: `${(result.scores.balanced / result.totalScore) * 100}%` }}></div>
-                </div>
-                <span className="score-value">{result.scores.balanced}</span>
-              </div>
-              <div className="score-item">
-                <span className="score-label">Cautious</span>
-                <div className="score-bar">
-                  <div className="score-fill cautious" style={{ width: `${(result.scores.cautious / result.totalScore) * 100}%` }}></div>
-                </div>
-                <span className="score-value">{result.scores.cautious}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="results-traits">
-            <h3>Your Traits</h3>
-            <div className="traits-grid">
-              {result.fruitInfo.traits.map((trait, idx) => (
-                <div key={idx} className="trait-badge">{trait}</div>
-              ))}
-            </div>
-          </div>
-
-          <button onClick={handleRestart} className="btn-restart">
-            Take Quiz Again
-          </button>
-        </div>
-      </div>
-    );
+    // Return null or empty div since results are shown in QuizPage
+    return null;
   }
 
   // Quiz Questions - Card directly on background
@@ -292,15 +202,22 @@ const PersonalityQuiz = () => {
   return (
     <div 
       className={`quiz-container stage-${questionStage} ${backgroundDim ? 'dimmed' : ''}`}
-      style={{ 
-        backgroundImage: getCurrentBackground(), 
-        backgroundSize: 'auto 100vh', 
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
+      style={getBackgroundStyle()}
     >
+      {/* White overlay with z-index 500 */}
+      {showWhiteOverlay && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'white',
+            zIndex: 500
+          }}
+        />
+      )}
+
       <div 
-        className={`quiz-card transparent ${showQuizCard ? 'show-card' : 'hide-card'} stage-${questionStage} ${isTransitioning ? 'transitioning' : ''}`}
+        className={`quiz-card transparent ${showQuizCard ? 'show-card' : 'hide-card'} stage-${questionStage} ${isTransitioning ? 'transitioning' : ''} ${!showCard ? 'force-hidden' : ''}`}
       >
         <div className="quiz-header">
           <div className="progress-info">
