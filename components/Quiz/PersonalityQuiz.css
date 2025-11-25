@@ -288,7 +288,7 @@
   overflow: hidden;
   max-height: 90vh;
   overflow-y: auto;
-  background: white; /* Start page stays solid */
+  background: white;
 }
 
 .start-hero-image {
@@ -868,16 +868,17 @@
   }
 }
 
+/* Card visibility control */
 .quiz-card.hide-card {
   opacity: 0;
   transform: translateY(30px) scale(0.95);
+  pointer-events: none;
 }
 
 .quiz-card.show-card {
   animation: cardSlideIn 1.5s ease-out forwards;
+  pointer-events: auto;
 }
-
-/* Add this to your existing PersonalityQuiz.css file */
 
 /* Force hide the quiz card when user wants to view background */
 .quiz-card.force-hidden {
@@ -889,4 +890,140 @@
 /* Smooth transition for hiding/showing card */
 .quiz-card {
   transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Narrative Card - CRITICAL: Ensure it's absolutely positioned and full screen */
+.narrative-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 24px;
+  padding: 60px 40px;
+  max-width: 700px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1001;
+  pointer-events: auto;
+}
+
+.narrative-card.animate {
+  animation: narrativeFadeIn 1s ease-out;
+}
+
+@keyframes narrativeFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+  }
+}
+
+.narrative-emoji {
+  font-size: 80px;
+  margin-bottom: 30px;
+  animation: narrativeEmojiBounce 2s ease-in-out infinite;
+}
+
+@keyframes narrativeEmojiBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.narrative-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2d5016;
+  line-height: 1.6;
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+/* Narrative progress dots */
+.narrative-progress {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.narrative-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(224, 224, 224, 0.5);
+  transition: all 0.3s ease;
+}
+
+.narrative-dot.active {
+  background: #4CAF50;
+  transform: scale(1.4);
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.narrative-dot.completed {
+  background: #8BC34A;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .narrative-card {
+    padding: 40px 30px;
+    width: 85%;
+  }
+  
+  .narrative-emoji {
+    font-size: 60px;
+  }
+  
+  .narrative-text {
+    font-size: 20px;
+  }
+
+  .narrative-progress {
+    margin-top: 20px;
+  }
+  
+  .narrative-dot {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .narrative-card {
+    padding: 30px 20px;
+    width: 90%;
+  }
+  
+  .narrative-emoji {
+    font-size: 50px;
+    margin-bottom: 20px;
+  }
+  
+  .narrative-text {
+    font-size: 18px;
+  }
+
+  .narrative-progress {
+    margin-top: 15px;
+    gap: 8px;
+  }
+  
+  .narrative-dot {
+    width: 8px;
+    height: 8px;
+  }
 }

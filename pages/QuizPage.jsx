@@ -36,6 +36,11 @@ const QuizPage = () => {
     navigate('/tree');
   };
 
+  const handleRetake = () => {
+    // Clear the quiz result to go back to quiz
+    setQuizResult(null);
+  };
+
   const toggleAnimations = () => {
     setAnimationsEnabled(!animationsEnabled);
   };
@@ -46,7 +51,13 @@ const QuizPage = () => {
 
   // Show result page
   if (quizResult) {
-    return <QuizResult result={quizResult} onContinue={handleContinue} />;
+    return (
+      <QuizResult 
+        result={quizResult} 
+        onContinue={handleContinue}
+        onRetake={handleRetake}
+      />
+    );
   }
 
   return (

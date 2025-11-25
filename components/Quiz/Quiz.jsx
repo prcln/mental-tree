@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './PersonalityQuiz.css';
 import { QUIZ_CONFIG } from '../../constants/QUIZ_CONFIG';
 import StartPortal from './StartPortal';
+import QuizResult from './QuizResult';
 
 // Import your background images here
 import question1Bg from '../../assets/backgrounds/question1.jpg';
@@ -23,13 +24,18 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
   const [result, setResult] = useState(null);
 
   // Stage management
-  const [questionStage, setQuestionStage] = useState('in'); // 'in', 'answer', 'out'
+  const [questionStage, setQuestionStage] = useState('in');
   const [backgroundDim, setBackgroundDim] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showQuizCard, setShowQuizCard] = useState(false);
   const [showWhiteOverlay, setShowWhiteOverlay] = useState(false);
+
+  // Enhanced narrative state for multiple narratives
+  const [showNarrative, setShowNarrative] = useState(false);
+  const [currentNarrativeIndex, setCurrentNarrativeIndex] = useState(0);
+  const [narrativesComplete, setNarrativesComplete] = useState(false);
   
-  const { questions, fruitTypes, backgrounds } = QUIZ_CONFIG;
+  const { questions, fruitTypes, backgrounds, animations } = QUIZ_CONFIG;
 
   // Map of background images
   const backgroundImages = {
@@ -53,9 +59,27 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
     });
   }, []);
 
+  // Handle narrative sequence when question changes
   useEffect(() => {
-    if (hasStarted && !showResults) {
-      // For first question, show card immediately
+    if (!hasStarted || showResults) return;
+
+    const currentQ = questions[currentQuestion];
+    const narratives = currentQ?.narratives || (currentQ?.narrative ? [currentQ.narrative] : []);
+    const hasNarratives = narratives.length > 0;
+
+    // Reset narrative state for new question
+    setCurrentNarrativeIndex(0);
+    setNarrativesComplete(false);
+
+    // Check if current question has narratives
+    if (hasNarratives) {
+      // Start narrative sequence
+      setShowNarrative(true);
+      setShowQuizCard(false);
+      setQuestionStage('in');
+      setBackgroundDim(false);
+    } else {
+      // No narratives - proceed normally to question
       if (currentQuestion === 0) {
         setShowQuizCard(true);
         setQuestionStage('answer');
@@ -64,28 +88,62 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
         return;
       }
 
-      // For subsequent questions, animate in (or skip animation if disabled)
-      setShowQuizCard(false);
+      // Don't immediately show the card - wait for white overlay to finish
       setQuestionStage('in');
       setBackgroundDim(false);
-      setIsTransitioning(true);
 
-      // Show card after delay (or immediately if animations disabled)
       const cardTimer = setTimeout(() => {
         setShowQuizCard(true);
-      }, animationsEnabled ? 1300 : 100);
+        setIsTransitioning(true);
+      }, animationsEnabled ? animations.cardDelay : 100);
 
       const inTimer = setTimeout(() => {
         setQuestionStage('answer');
         setIsTransitioning(false);
-      }, animationsEnabled ? 1000 : 100);
+      }, animationsEnabled ? animations.stageInDuration : 100);
 
       return () => {
         clearTimeout(cardTimer);
         clearTimeout(inTimer);
       };
     }
-  }, [currentQuestion, showResults, hasStarted, animationsEnabled]);
+  }, [currentQuestion, showResults, hasStarted, animationsEnabled, questions, animations]);
+
+  // Handle multiple narrative sequence
+  useEffect(() => {
+    if (!hasStarted || showResults) return;
+
+    const currentQ = questions[currentQuestion];
+    const narratives = currentQ?.narratives || (currentQ?.narrative ? [currentQ.narrative] : []);
+    const hasNarratives = narratives.length > 0;
+
+    if (!showNarrative || !hasNarratives || narrativesComplete) return;
+
+    const currentNarrative = narratives[currentNarrativeIndex];
+    const narrativeDuration = animationsEnabled 
+      ? (currentNarrative.duration || animations.narrativeDisplay) 
+      : 100;
+
+    const narrativeTimer = setTimeout(() => {
+      // Check if there are more narratives
+      if (currentNarrativeIndex < narratives.length - 1) {
+        // Move to next narrative
+        setCurrentNarrativeIndex(currentNarrativeIndex + 1);
+      } else {
+        // All narratives complete - show question
+        setShowNarrative(false);
+        setNarrativesComplete(true);
+        
+        // Small delay before showing question card
+        setTimeout(() => {
+          setShowQuizCard(true);
+          setQuestionStage('answer');
+        }, animationsEnabled ? animations.narrativeTransition : 100);
+      }
+    }, narrativeDuration);
+
+    return () => clearTimeout(narrativeTimer);
+  }, [showNarrative, currentNarrativeIndex, narrativesComplete, animationsEnabled, showResults, hasStarted, currentQuestion, questions, animations]);
 
   const calculateResult = (finalScores) => {
     const totalScore = finalScores.bold + finalScores.balanced + finalScores.cautious;
@@ -104,6 +162,10 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       newScores[type] = (newScores[type] || 0) + points;
     });
     setScores(newScores);
+
+    // Reset narrative state for next question
+    setNarrativesComplete(false);
+    setCurrentNarrativeIndex(0);
 
     if (!animationsEnabled) {
       // No animations - instant transition
@@ -130,13 +192,11 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       return;
     }
 
-    // Stage 2: Dim the background when answer is clicked
+    // Stage 2: Dim the background and hide card when answer is clicked
     setQuestionStage('answer');
     setBackgroundDim(true);
     setIsTransitioning(true);
-
-    const dimDelay = 400;
-    const transitionDelay = 300;
+    setShowQuizCard(false);
 
     // Wait a moment while dimmed, then transition out
     setTimeout(() => {
@@ -146,13 +206,16 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       // Stage 3: Transition out to next question
       setTimeout(() => {
         if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1); // ← Move this here
-      }
-
-        setShowWhiteOverlay(false);
-        setBackgroundDim(false);
-
-        if (currentQuestion >= questions.length - 1) {
+          // Change question first, then clear overlay
+          setCurrentQuestion(currentQuestion + 1);
+          
+          // Wait a tiny bit before clearing overlay to prevent flash
+          setTimeout(() => {
+            setShowWhiteOverlay(false);
+            setBackgroundDim(false);
+            setIsTransitioning(false);
+          }, 50);
+        } else {
           const resultType = calculateResult(newScores);
           const totalScore = newScores.bold + newScores.balanced + newScores.cautious;
           
@@ -166,18 +229,23 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
           setResult(quizResult);
           setShowResults(true);
           
-          // Call onComplete callback if provided
           if (onComplete) {
             onComplete(quizResult);
           }
+          
+          setShowWhiteOverlay(false);
+          setIsTransitioning(false);
         }
-        setIsTransitioning(false);
-      }, transitionDelay);
-    }, dimDelay);
+      }, animations.whiteOverlayDuration);
+    }, animations.backgroundDim);
   };
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
+      // Reset narrative state
+      setNarrativesComplete(false);
+      setCurrentNarrativeIndex(0);
+      
       if (!animationsEnabled) {
         setCurrentQuestion(currentQuestion - 1);
         return;
@@ -188,7 +256,7 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       setTimeout(() => {
         setCurrentQuestion(currentQuestion - 1);
         setBackgroundDim(false);
-      }, 400);
+      }, animations.stageOutDuration);
     }
   };
 
@@ -196,11 +264,27 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
     setHasStarted(true);
   };
 
+  const handleRetake = () => {
+    // Reset all quiz state
+    setHasStarted(false);
+    setCurrentQuestion(0);
+    setScores({ bold: 0, balanced: 0, cautious: 0 });
+    setShowResults(false);
+    setResult(null);
+    setQuestionStage('in');
+    setBackgroundDim(false);
+    setIsTransitioning(false);
+    setShowQuizCard(false);
+    setShowWhiteOverlay(false);
+    setShowNarrative(false);
+    setCurrentNarrativeIndex(0);
+    setNarrativesComplete(false);
+  };
+
   const getCurrentBackground = () => {
     if (showResults) {
       return backgrounds?.default || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
-    // Get the background image for the current question
     const questionKey = `question${currentQuestion + 1}`;
     return `url(${backgroundImages[questionKey]})`;
   };
@@ -220,22 +304,47 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
     return <StartPortal onStart={handleStart} questionCount={questions.length} />;
   }
 
-  // Results Page - No longer shown here, handled by QuizPage
+  // Results Page
   if (showResults && result) {
-    // Return null or empty div since results are shown in QuizPage
-    return null;
+    return (
+      <QuizResult 
+        result={result} 
+        onContinue={onComplete ? () => onComplete(result) : null}
+        onRetake={handleRetake}
+      />
+    );
   }
 
-  // Quiz Questions - Card directly on background
+  // Quiz Questions
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const currentQ = questions[currentQuestion];
+  const narratives = currentQ?.narratives || (currentQ?.narrative ? [currentQ.narrative] : []);
+  const currentNarrative = narratives[currentNarrativeIndex];
 
   return (
     <div 
       className={`quiz-container stage-${questionStage} ${backgroundDim ? 'dimmed' : ''} ${!animationsEnabled ? 'no-animation' : ''}`}
       style={getBackgroundStyle()}
     >
-      {/* White overlay with z-index 500 */}
+      {/* Narrative Card - shows current narrative in sequence */}
+      {showNarrative && currentNarrative && (
+        <div className={`narrative-card ${animationsEnabled ? 'animate' : ''}`}>
+          <div className="narrative-emoji">{currentNarrative.emoji}</div>
+          <p className="narrative-text">{currentNarrative.text}</p>
+          {narratives.length > 1 && (
+            <div className="narrative-progress">
+              {narratives.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`narrative-dot ${idx === currentNarrativeIndex ? 'active' : ''} ${idx < currentNarrativeIndex ? 'completed' : ''}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* White overlay */}
       {showWhiteOverlay && animationsEnabled && (
         <div 
           style={{
@@ -247,68 +356,71 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
         />
       )}
 
-      <div 
-        className={`quiz-card transparent ${showQuizCard ? 'show-card' : 'hide-card'} stage-${questionStage} ${isTransitioning ? 'transitioning' : ''} ${!showCard ? 'force-hidden' : ''} ${hideQuestionCard ? 'force-hidden' : ''}`}
-      >
-        <div className="quiz-header">
-          <div className="progress-info">
-            <span className="question-counter">
-              Question {currentQuestion + 1} of {questions.length}
-            </span>
-            <span className="header-emoji">{currentQ.headerEmoji}</span>
-          </div>
-          <div className="progress-bar-container">
-            <div 
-              className="progress-bar-fill"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        <h2 className="quiz-question">
-          {currentQ.question}
-        </h2>
-
-        <div className="quiz-options">
-          {currentQ.options.map((option, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleAnswer(option)}
-              className="quiz-option"
-              disabled={isTransitioning}
-              style={{
-                animationDelay: `${idx * 0.1}s`
-              }}
-            >
-              <div className="option-content">
-                <span className="option-emoji">{option.emoji}</span>
-                <div className="option-text">
-                  <span className="option-label">{option.label}</span>
-                  {option.description && (
-                    <span className="option-description">{option.description}</span>
-                  )}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <div className="quiz-navigation">
-          {currentQuestion > 0 && (
-            <button onClick={handlePrevious} className="btn-previous" disabled={isTransitioning}>
-              ← Previous
-            </button>
-          )}
-          <div className="quiz-dots">
-            {questions.map((_, idx) => (
+      {/* Quiz Card - only show when NOT showing narrative */}
+      {!showNarrative && (
+        <div 
+          className={`quiz-card transparent ${showQuizCard ? 'show-card' : 'hide-card'} stage-${questionStage} ${isTransitioning ? 'transitioning' : ''} ${!showCard ? 'force-hidden' : ''} ${hideQuestionCard ? 'force-hidden' : ''}`}
+        >
+          <div className="quiz-header">
+            <div className="progress-info">
+              <span className="question-counter">
+                Question {currentQuestion + 1} of {questions.length}
+              </span>
+              <span className="header-emoji">{currentQ.headerEmoji}</span>
+            </div>
+            <div className="progress-bar-container">
               <div 
-                key={idx}
-                className={`dot ${idx === currentQuestion ? 'active' : ''} ${idx < currentQuestion ? 'completed' : ''}`}
+                className="progress-bar-fill"
+                style={{ width: `${progress}%` }}
               />
+            </div>
+          </div>
+
+          <h2 className="quiz-question">
+            {currentQ.question}
+          </h2>
+
+          <div className="quiz-options">
+            {currentQ.options.map((option, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleAnswer(option)}
+                className="quiz-option"
+                disabled={isTransitioning}
+                style={{
+                  animationDelay: animationsEnabled ? `${idx * (animations.optionStagger / 1000)}s` : '0s'
+                }}
+              >
+                <div className="option-content">
+                  <span className="option-emoji">{option.emoji}</span>
+                  <div className="option-text">
+                    <span className="option-label">{option.label}</span>
+                    {option.description && (
+                      <span className="option-description">{option.description}</span>
+                    )}
+                  </div>
+                </div>
+              </button>
             ))}
           </div>
+
+          <div className="quiz-navigation">
+            {currentQuestion > 0 && (
+              <button onClick={handlePrevious} className="btn-previous" disabled={isTransitioning}>
+                ← Previous
+              </button>
+            )}
+            <div className="quiz-dots">
+              {questions.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`dot ${idx === currentQuestion ? 'active' : ''} ${idx < currentQuestion ? 'completed' : ''}`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

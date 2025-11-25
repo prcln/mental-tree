@@ -4,12 +4,36 @@ export const QUIZ_CONFIG = {
     default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   },
 
+  // Animation timing configuration
+  animations: {
+    cardDelay: 300,
+    stageInDuration: 800,
+    stageOutDuration: 600,
+    backgroundDim: 400,
+    whiteOverlayDuration: 800,
+    narrativeDisplay: 3500,
+    narrativeTransition: 400,
+    optionStagger: 80
+  },
+
   questions: [
     {
       id: 'q1',
       question: 'How do you approach the mysterious glowing doorway?',
       headerEmoji: '🚪',
-      background: 'question1', // Just the key, not the import
+      narratives: [
+        {
+          text: "You stand at the edge of a forest path. The trees whisper ancient secrets, and two paths diverge before you...",
+          emoji: "🌲",
+          duration: 3500
+        },
+        {
+          text: "A shimmering portal materializes between the ancient oaks, pulsing with otherworldly light...",
+          emoji: "✨",
+          duration: 3500
+        }
+      ],
+      background: 'question1',
       options: [
         {
           emoji: '🏃',
@@ -41,6 +65,11 @@ export const QUIZ_CONFIG = {
       id: 'q2',
       question: 'The portal opens into floating orchards and shimmering fruit-creatures watching you. How do you take your first steps?',
       headerEmoji: '🌳',
+      narrative: {
+        text: "Colors swirl around you as reality shifts. You emerge into a world where fruits have consciousness and orchards float among clouds...",
+        emoji: "🌈",
+        duration: 3500
+      },
       background: 'question2',
       options: [
         {
@@ -73,6 +102,11 @@ export const QUIZ_CONFIG = {
       id: 'q3',
       question: 'How do you move through the shining crowd?',
       headerEmoji: '✨',
+      narrative: {
+        text: "Luminescent beings gather around, their forms shifting between fruit and humanoid shapes. They part to create a path...",
+        emoji: "👥",
+        duration: 3500
+      },
       background: 'question3',
       options: [
         {
@@ -111,6 +145,11 @@ export const QUIZ_CONFIG = {
       id: 'q4',
       question: 'How do you present yourself before the ancient Fruit Council?',
       headerEmoji: '🏛️',
+      narrative: {
+        text: "The grand hall opens before you. Seven ancient fruit beings sit on crystalline thrones, their eyes fixed upon you with timeless wisdom...",
+        emoji: "⚖️",
+        duration: 4000
+      },
       background: 'question4',
       options: [
         {
@@ -149,6 +188,11 @@ export const QUIZ_CONFIG = {
       id: 'q5',
       question: 'How do you rest on the giant leaf-couch?',
       headerEmoji: '🍃',
+      narrative: {
+        text: "After the council's blessing, you're led to a chamber of rest. A massive leaf, soft as silk, awaits you...",
+        emoji: "💤",
+        duration: 3000
+      },
       background: 'question5',
       options: [
         {
@@ -181,6 +225,18 @@ export const QUIZ_CONFIG = {
       id: 'q6',
       question: 'How do you enter the Grand Fruit Ball?',
       headerEmoji: '💃',
+      narratives: [
+        {
+          text: "Evening falls over the fruit kingdom. The Grand Ball begins, and music fills the crystalline halls...",
+          emoji: "🎵",
+          duration: 3000
+        },
+        {
+          text: "Thousands of fruit-beings dance in swirling patterns. All eyes turn to the entrance as you arrive...",
+          emoji: "👀",
+          duration: 3500
+        }
+      ],
       background: 'question6',
       options: [
         {
@@ -207,6 +263,11 @@ export const QUIZ_CONFIG = {
       id: 'q7',
       question: 'When the crystal interrupts your focus, you feel:',
       headerEmoji: '🔮',
+      narrative: {
+        text: "Deep in meditation with the Oracle Crystal, your mind expands across dimensions. Suddenly, the crystal pulses and interrupts your trance...",
+        emoji: "⚡",
+        duration: 3500
+      },
       background: 'question7',
       options: [
         {
@@ -231,8 +292,13 @@ export const QUIZ_CONFIG = {
     },
     {
       id: 'q8',
-      question: 'The color that appears feels like:',
+      question: 'The color that appears in your vision feels like:',
       headerEmoji: '🎨',
+      narrative: {
+        text: "The Oracle Crystal shows you colors beyond the human spectrum. One color resonates with your very essence...",
+        emoji: "🌟",
+        duration: 3500
+      },
       background: 'question8',
       options: [
         {
@@ -283,6 +349,11 @@ export const QUIZ_CONFIG = {
       id: 'q9',
       question: 'Your sleeping posture reveals:',
       headerEmoji: '😴',
+      narrative: {
+        text: "As night falls in the fruit kingdom, you retire to your chamber. The way you sleep reveals truths about your deepest self...",
+        emoji: "🌙",
+        duration: 3500
+      },
       background: 'question9',
       options: [
         {
@@ -321,6 +392,18 @@ export const QUIZ_CONFIG = {
       id: 'q10',
       question: 'What do you dream of?',
       headerEmoji: '💭',
+      narratives: [
+        {
+          text: "In the realm of dreams, the fruit spirits watch over you. Your subconscious reveals its secrets...",
+          emoji: "✨",
+          duration: 3000
+        },
+        {
+          text: "The final truth emerges from the depths of sleep. What appears in your mind's eye?",
+          emoji: "🌌",
+          duration: 3500
+        }
+      ],
       background: 'question10',
       options: [
         {
