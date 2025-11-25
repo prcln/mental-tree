@@ -12,7 +12,7 @@ import { treeService } from '../../services/treeService';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
 const TreePage = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const currentUserId = user.id;
   const navigate = useNavigate();
   const [currentTreeId, setCurrentTreeId] = useState(null);
@@ -100,23 +100,23 @@ const TreePage = () => {
         
         if (isRetaking) {
           // Reset tree with new tree type
-          const updatedTree = await treeService.resetTree(currentTreeId, quizResult.treeType);
+          const updatedTree = await treeService.resetTree(currentTreeId, quizResult.fruitType);
           setCurrentTree(updatedTree);
           
           // Update user profile seed type
           await userService.updateUserProfile(user.id, { 
-            seed_type: quizResult.treeType 
+            seed_type: quizResult.fruitType 
           });
           
           sessionStorage.removeItem('isRetakingQuiz');
         } else {
           // First time completing quiz
-          const updatedTree = await treeService.markQuizCompleted(currentTreeId, quizResult.treeType);
+          const updatedTree = await treeService.markQuizCompleted(currentTreeId, quizResult.fruitType);
           setCurrentTree(updatedTree);
           
           // Update user profile seed type
           await userService.updateUserProfile(user.id, { 
-            seed_type: quizResult.treeType 
+            seed_type: quizResult.fruitType 
           });
         }
       }

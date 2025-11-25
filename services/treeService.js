@@ -5,33 +5,33 @@ import { cooldownService } from "./cooldownService";
 import { messageService } from "./messageService";
 
 export const treeService = {
-  createTree: async (userId, treeType = 'oak') => {
-    const { data, error } = await supabase
-      .from('trees')
-      .insert({
-        user_id: userId,
-        tree_type: treeType,
-        mood_score: 0,
-        stage: 'seed',
-        is_public: false,
-        completed_quiz: false,
-        last_check_in: null
-      })
-      .select();
+  createTree: async (userId, fruitType = 'greenapple') => {
+  const { data, error } = await supabase
+    .from('trees')
+    .insert({
+      user_id: userId,
+      tree_type: fruitType, // Changed from treeType parameter
+      mood_score: 0,
+      stage: 'seed',
+      is_public: false,
+      completed_quiz: false,
+      last_check_in: null
+    })
+    .select();
 
-    if (error) handleQueryError(error, 'createTree');
+  if (error) handleQueryError(error, 'createTree');
 
-    const tree = data[0];
-    
-    // Link tree to user profile (don't fail if this errors)
-    try {
-      await treeService.linkTreeToUser(userId, tree.id);
-    } catch (linkError) {
-      console.error('Error linking tree to user:', linkError);
-    }
+  const tree = data[0];
+  
+  // Link tree to user profile (don't fail if this errors)
+  try {
+    await treeService.linkTreeToUser(userId, tree.id);
+  } catch (linkError) {
+    console.error('Error linking tree to user:', linkError);
+  }
 
-    return tree;
-  },
+  return tree;
+},
 
   getTree: async (treeId) => {
     return fetchSingleRow(
@@ -66,58 +66,59 @@ export const treeService = {
     return userService.updateUserProfile(userId, { current_tree_id: treeId });
   },
 
-  markQuizCompleted: async (treeId, treeType) => {
-    return treeService.updateTree(treeId, {
+  markQuizCompleted: async (treeId, fruitType) => {
+  return treeService.updateTree(treeId, {
+    completed_quiz: true,
+    tree_type: fruitType // Changed from treeType parameter
+  });
+},
+
+
+  resetTree: async (treeId, newFruitType = 'greenapple') => {
+  // Check cooldown
+  const { canResetTree } = await cooldownService.canResetTree(treeId);
+  
+  if (!canResetTree) {
+    throw new Error('You can only reset your tree once every 24 hours');
+  }
+
+  // Get tree owner
+  const tree = await treeService.getTree(treeId);
+
+  // Delete all messages associated with this tree
+  const { error: deleteError } = await supabase
+    .from('messages')
+    .delete()
+    .eq('tree_id', treeId);
+
+  if (deleteError) {
+    console.error('Failed to delete messages:', deleteError);
+    handleQueryError(deleteError, 'resetTree - delete messages');
+  }
+
+  // Reset the tree
+  const { data, error } = await supabase
+    .from('trees')
+    .update({
+      tree_type: newFruitType, // Changed from newTreeType parameter
+      mood_score: 0,
+      message_count: 0,
+      stage: 'seed',
       completed_quiz: true,
-      tree_type: treeType
-    });
-  },
+      last_check_in: null,
+      last_reset_tree: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', treeId)
+    .select();
 
-  resetTree: async (treeId, newTreeType = 'oak') => {
-    // Check cooldown
-    const { canResetTree } = await cooldownService.canResetTree(treeId);
-    
-    if (!canResetTree) {
-      throw new Error('You can only reset your tree once every 24 hours');
-    }
+  if (error) handleQueryError(error, 'resetTree');
 
-    // Get tree owner
-    const tree = await treeService.getTree(treeId);
+  // Increment stats (non-blocking)
+  userService.incrementUserStats(tree.user_id, 'total_trees_grown').catch(console.error);
 
-    // Delete all messages associated with this tree
-    const { error: deleteError } = await supabase
-      .from('messages')
-      .delete()
-      .eq('tree_id', treeId);
-
-    if (deleteError) {
-      console.error('Failed to delete messages:', deleteError);
-      handleQueryError(deleteError, 'resetTree - delete messages');
-    }
-
-    // Reset the tree
-    const { data, error } = await supabase
-      .from('trees')
-      .update({
-        tree_type: newTreeType,
-        mood_score: 0,
-        message_count: 0,
-        stage: 'seed',
-        completed_quiz: true,
-        last_check_in: null,
-        last_reset_tree: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', treeId)
-      .select();
-
-    if (error) handleQueryError(error, 'resetTree');
-
-    // Increment stats (non-blocking)
-    userService.incrementUserStats(tree.user_id, 'total_trees_grown').catch(console.error);
-
-    return data[0];
-  },
+  return data[0];
+},
 
   toggleTreePublic: async (treeId) => {
     const tree = await treeService.getTree(treeId);

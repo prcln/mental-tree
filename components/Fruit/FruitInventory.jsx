@@ -4,7 +4,7 @@ import { fruitService } from '../../services/fruitService';
 import { fruitEmojis, rarityColors } from '../../constants/fruits';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
-const FruitInventory = ({ userId , onClose }) => {
+const FruitInventory = ({ userId, onClose }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('fruits');
   const [inventory, setInventory] = useState([]);
@@ -61,10 +61,49 @@ const FruitInventory = ({ userId , onClose }) => {
     );
   };
 
+  // Helper function to render collectible image or icon
+  const renderCollectibleImage = (imageUrl, size = 'md') => {
+    const sizeClasses = {
+      sm: 'w-8 h-8 sm:w-10 sm:h-10',
+      md: 'w-12 h-12 sm:w-16 sm:h-16',
+      lg: 'w-16 h-16 sm:w-20 sm:h-20'
+    };
+
+    const textSizeClasses = {
+      sm: 'text-2xl sm:text-3xl',
+      md: 'text-3xl sm:text-5xl',
+      lg: 'text-4xl sm:text-6xl'
+    };
+
+    // Check if it's a valid string
+    if (imageUrl && typeof imageUrl === 'string' && imageUrl.length > 0) {
+      // Check if it's an emoji/icon (typically 1-4 characters)
+      if (imageUrl.length <= 4) {
+        return <div className={textSizeClasses[size]}>{imageUrl}</div>;
+      }
+      
+      // Otherwise treat it as an image URL
+      return (
+        <img 
+          src={imageUrl} 
+          alt="Collectible"
+          className={`${sizeClasses[size]} object-contain`}
+          onError={(e) => {
+            // Fallback to emoji if image fails to load
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'block';
+          }}
+        />
+      );
+    }
+    
+    // Fallback to sparkle emoji
+    return <div className={textSizeClasses[size]}>✨</div>;
+  };
+
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-      >
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl p-8">
           <div className="animate-spin text-4xl">🌀</div>
         </div>
@@ -176,10 +215,14 @@ const FruitInventory = ({ userId , onClose }) => {
                     }`}
                   >
                     <div className="flex items-start gap-2 sm:gap-4">
-                      <div className="text-3xl sm:text-5xl flex-shrink-0">{collectible.image_url}</div>
+                      <div className="flex-shrink-0 flex items-center justify-center">
+                        {renderCollectibleImage(collectible.image_url, 'md')}
+                        {/* Fallback emoji if image fails */}
+                        <div className="hidden text-3xl sm:text-5xl">✨</div>
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-sm sm:text-lg truncate sm:whitespace-normal">
-                          {collectible.display_name}
+                          {collectible.name}
                         </h3>
                         {/* Hide description on small screens */}
                         <p className="hidden sm:block text-sm opacity-75 mb-2">
@@ -203,15 +246,17 @@ const FruitInventory = ({ userId , onClose }) => {
                         {/* Exchange Button */}
                         <button
                           onClick={() => handleExchange(collectible.id)}
-                          disabled={!affordable || exchanging === collectible.id}
+                          disabled={!affordable || owned || exchanging === collectible.id}
                           className={`w-full py-1.5 sm:py-2 rounded-lg font-semibold transition-all text-xs sm:text-base ${
-                            affordable
+                            owned
+                              ? 'bg-blue-100 text-blue-600 cursor-default'
+                              : affordable
                               ? 'bg-green-500 text-white hover:bg-green-600'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           } ${exchanging === collectible.id ? 'animate-pulse' : ''}`}
                         >
                           {owned
-                            ? `Owned (${owned.quantity})`
+                            ? `✓ Owned (${owned.quantity})`
                             : affordable
                             ? t('collection.exchange.btn')
                             : t('collection.notEnough')}
@@ -246,10 +291,14 @@ const FruitInventory = ({ userId , onClose }) => {
                     }`}
                   >
                     <div className="flex items-center gap-2 sm:gap-4">
-                      <div className="text-3xl sm:text-5xl flex-shrink-0">{item.collectible.image_url}</div>
+                      <div className="flex-shrink-0 flex items-center justify-center">
+                        {renderCollectibleImage(item.collectible.image_url, 'md')}
+                        {/* Fallback emoji if image fails */}
+                        <div className="hidden text-3xl sm:text-5xl">✨</div>
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-sm sm:text-lg truncate sm:whitespace-normal">
-                          {item.collectible.display_name}
+                          {item.collectible.name}
                         </h3>
                         {/* Hide description on small screens */}
                         <p className="hidden sm:block text-sm opacity-75">
