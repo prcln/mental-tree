@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 
 import peachResult from '../../assets/results/peach.jpg';
-import greenappleResult from '../../assets/results/greenApple.jpg';
+import greenappleResult from '../../assets/results/greenapple.jpg';
 import mangoResult from '../../assets/results/mango.jpg';
 import strawberryResult from '../../assets/results/strawberry.jpg';
 import pineappleResult from '../../assets/results/pineapple.jpg';
@@ -9,7 +9,7 @@ import cherryResult from '../../assets/results/cherry.jpg';
 
 const QuizResult = ({ result, onContinue, onRetake }) => {
   const resultImageRef = useRef(null);
-
+  console.log(result);
   // Map result types to their images
   const resultImages = {
     peach: peachResult, // Replace with: peachResult
@@ -61,7 +61,7 @@ const QuizResult = ({ result, onContinue, onRetake }) => {
       <div style={{
         borderRadius: '1.5rem',
         padding: '1rem',
-        maxWidth: 'auto 100vh',
+        maxWidth: 'auto 80vh',
         width: '100%',
         animation: 'slideUp 0.6s ease-out'
       }}>
@@ -88,7 +88,7 @@ const QuizResult = ({ result, onContinue, onRetake }) => {
         borderRadius: '1.5rem',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         padding: '2rem',
-        maxWidth: 'auto 100vh',
+        maxWidth: 'auto 80vh',
         width: '100%',
         animation: 'slideUp 0.8s ease-out'
       }}>

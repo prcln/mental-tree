@@ -1,0 +1,258 @@
+.retake-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.retake-modal-card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 28rem;
+  width: 100%;
+  margin-top: 5rem;
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.retake-modal-header {
+  background: linear-gradient(to right, #f59e0b, #f97316);
+  padding: 1.5rem;
+  color: white;
+  position: relative;
+  border-radius: 1.5rem 1.5rem 0 0;
+}
+
+.retake-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: white;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  transition: all 0.2s;
+}
+
+.retake-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.retake-modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.retake-modal-icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.retake-modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.retake-modal-content {
+  padding: 1.5rem;
+}
+
+.retake-modal-emoji-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.retake-modal-emoji {
+  font-size: 4rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.retake-modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.retake-modal-warning {
+  background: #fffbeb;
+  border: 2px solid #fde68a;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.retake-modal-warning-title {
+  color: #92400e;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.retake-modal-warning-list {
+  color: #b45309;
+  font-size: 0.875rem;
+  list-style: none;
+  padding-left: 1rem;
+  margin: 0;
+}
+
+.retake-modal-warning-list li {
+  margin-bottom: 0.25rem;
+}
+
+.retake-modal-description {
+  color: #4b5563;
+  text-align: center;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.retake-modal-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.retake-modal-btn-confirm {
+  width: 100%;
+  background: linear-gradient(to right, #10b981, #059669);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.retake-modal-btn-confirm:hover {
+  background: linear-gradient(to right, #059669, #047857);
+  transform: scale(1.05);
+}
+
+.retake-modal-btn-cancel {
+  width: 100%;
+  background: #e5e7eb;
+  color: #374151;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retake-modal-btn-cancel:hover {
+  background: #d1d5db;
+}
+
+.retake-modal-cooldown {
+  text-align: center;
+}
+
+.retake-modal-cooldown-box {
+  background: #fef2f2;
+  border: 2px solid #fecaca;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.retake-modal-cooldown-title {
+  color: #991b1b;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.retake-modal-cooldown-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.retake-modal-icon-small {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .retake-modal-card {
+    margin-top: 2rem;
+  }
+
+  .retake-modal-header {
+    padding: 1.25rem;
+  }
+
+  .retake-modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .retake-modal-emoji {
+    font-size: 3rem;
+  }
+
+  .retake-modal-title {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .retake-modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .retake-modal-card {
+    margin-top: 1rem;
+  }
+
+  .retake-modal-header {
+    padding: 1rem;
+  }
+
+  .retake-modal-content {
+    padding: 1rem;
+  }
+
+  .retake-modal-emoji {
+    font-size: 2.5rem;
+  }
+}

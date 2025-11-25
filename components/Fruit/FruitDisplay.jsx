@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fruitService } from '../../services/fruitService';
 import { fruitEmojis } from '../../constants/fruits';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';

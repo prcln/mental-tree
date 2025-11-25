@@ -11,11 +11,6 @@ function Footer() {
     <footer className="site-footer">
       <div className="footer-content">
         <p>&copy; {`${currentYear} ${t('footer.project')}`}</p>
-        <div className="footer-links">
-          <a href="/about">{t('footer.about')}</a>
-          <a href="/terms">{t('footer.tos')}</a>
-          <a href="/privacy">{t('footer.privacy')}</a>
-        </div>
         <div>
           <LanguageSwitcher />
         </div>

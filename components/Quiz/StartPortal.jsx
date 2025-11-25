@@ -16,11 +16,9 @@ const StartPortal = ({ onStart, questionCount }) => {
   return (
     <div className="portal-container" style={getBackgroundStyle()}>
       <div className="portal-card">
-        <div className="portal-hero-image">
-          <div className="image-placeholder">
-            🍊🍓🍇
-            <span className="placeholder-text">Welcome to Fruitville</span>
-          </div>
+        <div className="portal-hero">
+          <div className="hero-emoji">🍊🍓🍇</div>
+          <div className="hero-title">Welcome to Fruitville</div>
         </div>
 
         <div className="portal-content">
@@ -29,35 +27,8 @@ const StartPortal = ({ onStart, questionCount }) => {
           </h1>
           
           <p className="portal-description">
-            Step through the mysterious portal into Fruitville! 
-            Journey through floating orchards and discover which fruit reflects your true essence.
+            Journey through {questionCount} enchanted questions and discover which fruit reflects your true essence in the magical world of Fruitville.
           </p>
-
-          <div className="portal-features">
-            <div className="feature-item">
-              <div className="feature-image-placeholder">
-                <span className="feature-emoji">✨</span>
-              </div>
-              <h3>Magical Journey</h3>
-              <p>{questionCount} enchanted questions</p>
-            </div>
-            
-            <div className="feature-item">
-              <div className="feature-image-placeholder">
-                <span className="feature-emoji">🍑</span>
-              </div>
-              <h3>Your Fruit Self</h3>
-              <p>Discover your personality</p>
-            </div>
-            
-            <div className="feature-item">
-              <div className="feature-image-placeholder">
-                <span className="feature-emoji">🌈</span>
-              </div>
-              <h3>Unique Results</h3>
-              <p>Personalized insights</p>
-            </div>
-          </div>
 
           <button onClick={onStart} className="btn-start">
             Enter the Portal

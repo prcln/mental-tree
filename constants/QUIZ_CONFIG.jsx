@@ -23,15 +23,15 @@ export const QUIZ_CONFIG = {
       headerEmoji: '🚪',
       narratives: [
         {
-          text: "You stand at the edge of a forest path. The trees whisper ancient secrets, and two paths diverge before you...",
-          emoji: "🌲",
-          duration: 3500
+          text: "Last night, before going to sleep, a portal appeared in your bedroom...",
+          emoji: "",
+          duration: 2500
         },
         {
-          text: "A shimmering portal materializes between the ancient oaks, pulsing with otherworldly light...",
-          emoji: "✨",
-          duration: 3500
-        }
+          text: "Traveler, Fruitville needs a new champion. Enter the portal before sunrise… if you are brave enough...",
+          emoji: "🌟",
+          duration: 2500
+        },
       ],
       background: 'question1',
       options: [
@@ -227,14 +227,14 @@ export const QUIZ_CONFIG = {
       headerEmoji: '💃',
       narratives: [
         {
-          text: "Evening falls over the fruit kingdom. The Grand Ball begins, and music fills the crystalline halls...",
+          text: "Evening falls over the fruit kingdom. The Grand Ball begins, and music fills the crystalline halls... You must enter the Grand Fruit Ball alone.",
           emoji: "🎵",
-          duration: 3000
+          duration: 3500
         },
         {
           text: "Thousands of fruit-beings dance in swirling patterns. All eyes turn to the entrance as you arrive...",
           emoji: "👀",
-          duration: 3500
+          duration: 2500
         }
       ],
       background: 'question6',
@@ -264,9 +264,9 @@ export const QUIZ_CONFIG = {
       question: 'When the crystal interrupts your focus, you feel:',
       headerEmoji: '🔮',
       narrative: {
-        text: "Deep in meditation with the Oracle Crystal, your mind expands across dimensions. Suddenly, the crystal pulses and interrupts your trance...",
+        text: "You’re studying ancient scrolls when a floating crystal interrupts...",
         emoji: "⚡",
-        duration: 3500
+        duration: 2500
       },
       background: 'question7',
       options: [
@@ -292,7 +292,7 @@ export const QUIZ_CONFIG = {
     },
     {
       id: 'q8',
-      question: 'The color that appears in your vision feels like:',
+      question: 'Which appears?',
       headerEmoji: '🎨',
       narrative: {
         text: "The Oracle Crystal shows you colors beyond the human spectrum. One color resonates with your very essence...",
@@ -350,7 +350,7 @@ export const QUIZ_CONFIG = {
       question: 'Your sleeping posture reveals:',
       headerEmoji: '😴',
       narrative: {
-        text: "As night falls in the fruit kingdom, you retire to your chamber. The way you sleep reveals truths about your deepest self...",
+        text: "After studying the scrolls and crystal for a while, you sleep inside a giant flowering fruit shell. The way you sleep reveals truths about your deepest self...",
         emoji: "🌙",
         duration: 3500
       },
@@ -390,7 +390,7 @@ export const QUIZ_CONFIG = {
     },
     {
       id: 'q10',
-      question: 'What do you dream of?',
+      question: 'What do you dream of most often?',
       headerEmoji: '💭',
       narratives: [
         {

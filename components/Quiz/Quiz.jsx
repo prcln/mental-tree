@@ -16,12 +16,27 @@ import question8Bg from '../../assets/backgrounds/question8.jpg';
 import question9Bg from '../../assets/backgrounds/question9.jpg';
 import question10Bg from '../../assets/backgrounds/question10.jpg';
 
+  // Map of background images
+  const backgroundImages =  {
+    question1: question1Bg,
+    question2: question2Bg,
+    question3: question3Bg,
+    question4: question4Bg,
+    question5: question5Bg,
+    question6: question6Bg,
+    question7: question7Bg,
+    question8: question8Bg,
+    question9: question9Bg,
+    question10: question10Bg,
+  };
+
 const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true, hideQuestionCard }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [scores, setScores] = useState({ bold: 0, balanced: 0, cautious: 0 });
   const [showResults, setShowResults] = useState(false);
   const [result, setResult] = useState(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // Stage management
   const [questionStage, setQuestionStage] = useState('in');
@@ -37,26 +52,31 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
   
   const { questions, fruitTypes, backgrounds, animations } = QUIZ_CONFIG;
 
-  // Map of background images
-  const backgroundImages = {
-    question1: question1Bg,
-    question2: question2Bg,
-    question3: question3Bg,
-    question4: question4Bg,
-    question5: question5Bg,
-    question6: question6Bg,
-    question7: question7Bg,
-    question8: question8Bg,
-    question9: question9Bg,
-    question10: question10Bg,
-  };
-
   // Preload all background images to eliminate loading jitter
   useEffect(() => {
-    Object.values(backgroundImages).forEach((src) => {
-      const img = new Image();
-      img.src = src;
+    const imagesToPreload = Object.values(backgroundImages);
+    let loadedCount = 0;
+
+    const imagePromises = imagesToPreload.map((src) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          loadedCount++;
+          resolve();
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
     });
+
+    Promise.all(imagePromises)
+      .then(() => {
+        setImagesLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Failed to preload images:', error);
+        setImagesLoaded(true); // Proceed anyway
+      });
   }, []);
 
   // Handle narrative sequence when question changes
@@ -131,14 +151,14 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
         setCurrentNarrativeIndex(currentNarrativeIndex + 1);
       } else {
         // All narratives complete - show question
-        setShowNarrative(false);
         setNarrativesComplete(true);
+        setShowQuizCard(true);
+        setQuestionStage('answer');
         
         // Small delay before showing question card
         setTimeout(() => {
-          setShowQuizCard(true);
-          setQuestionStage('answer');
-        }, animationsEnabled ? animations.narrativeTransition : 100);
+          setShowNarrative(false);
+        }, animationsEnabled ? 50 : 0);
       }
     }, narrativeDuration);
 
@@ -196,48 +216,42 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
     setQuestionStage('answer');
     setBackgroundDim(true);
     setIsTransitioning(true);
-    setShowQuizCard(false);
 
     // Wait a moment while dimmed, then transition out
     setTimeout(() => {
-      setQuestionStage('out');
-      setShowWhiteOverlay(true);
+  setQuestionStage('out');
+  setShowWhiteOverlay(true);
+  
+  // Stage 3: Transition out to next question
+  setTimeout(() => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setShowWhiteOverlay(false);              // ← Clear immediately
+      setBackgroundDim(false);
+      setIsTransitioning(false);
+    } else {
+      const resultType = calculateResult(newScores);
+      const totalScore = newScores.bold + newScores.balanced + newScores.cautious;
       
-      // Stage 3: Transition out to next question
-      setTimeout(() => {
-        if (currentQuestion < questions.length - 1) {
-          // Change question first, then clear overlay
-          setCurrentQuestion(currentQuestion + 1);
-          
-          // Wait a tiny bit before clearing overlay to prevent flash
-          setTimeout(() => {
-            setShowWhiteOverlay(false);
-            setBackgroundDim(false);
-            setIsTransitioning(false);
-          }, 50);
-        } else {
-          const resultType = calculateResult(newScores);
-          const totalScore = newScores.bold + newScores.balanced + newScores.cautious;
-          
-          const quizResult = {
-            fruitType: resultType,
-            fruitInfo: fruitTypes[resultType],
-            scores: newScores,
-            totalScore
-          };
-          
-          setResult(quizResult);
-          setShowResults(true);
-          
-          if (onComplete) {
-            onComplete(quizResult);
-          }
-          
-          setShowWhiteOverlay(false);
-          setIsTransitioning(false);
-        }
-      }, animations.whiteOverlayDuration);
-    }, animations.backgroundDim);
+      const quizResult = {
+        fruitType: resultType,
+        fruitInfo: fruitTypes[resultType],
+        scores: newScores,
+        totalScore
+      };
+      
+      setResult(quizResult);
+      setShowResults(true);
+      
+      if (onComplete) {
+        onComplete(quizResult);
+      }
+      
+      setShowWhiteOverlay(false);
+      setIsTransitioning(false);
+    }
+  }, animations.whiteOverlayDuration);
+}, animations.backgroundDim);
   };
 
   const handlePrevious = () => {
@@ -256,6 +270,9 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
       setTimeout(() => {
         setCurrentQuestion(currentQuestion - 1);
         setBackgroundDim(false);
+        setIsTransitioning(false); 
+        setShowQuizCard(true);       
+        setQuestionStage('answer');
       }, animations.stageOutDuration);
     }
   };

@@ -1,6 +1,7 @@
   export const fruitEmojis = {
-    apple: '🍎',
-    orange: '🍊',
+    greenapple: '🍏',
+    pineapple: '🍍',
+    strawberry: '🍓',
     cherry: '🍒',
     peach: '🍑',
     mango: '🥭'
