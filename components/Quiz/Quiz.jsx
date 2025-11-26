@@ -169,7 +169,7 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
     const totalScore = finalScores.bold + finalScores.balanced + finalScores.cautious;
     
     if (totalScore <= 21) return 'peach';
-    if (totalScore <= 30) return 'greenApple';
+    if (totalScore <= 30) return 'greenapple';
     if (totalScore <= 40) return 'mango';
     if (totalScore <= 50) return 'strawberry';
     if (totalScore <= 60) return 'pineapple';

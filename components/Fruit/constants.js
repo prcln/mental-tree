@@ -13,14 +13,15 @@ const SEARCH_FILTERS = {
 
 const EXPIRATION_OPTIONS = [6, 12, 24, 48];
 
-const FRUIT_TYPES = ['apple', 'orange', 'pine', 'cherry', 'plum'];
+const FRUIT_TYPES = ['greenapple', 'pineapple', 'peach', 'cherry', 'mango', 'strawberry'];
 
 const FRUIT_EMOJI_MAP = {
-  apple: '🍎',
-  orange: '🍊',
-  pine: '🌲',
+  greenapple: '🍎',
+  mango: '🥭',
+  pineapple: '🍍',
   cherry: '🍒',
-  plum: '🍑',
+  peach: '🍑',
+  strawberry: '🍓',
   default: '🍇'
 };
 

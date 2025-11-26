@@ -16,7 +16,7 @@ export const userService = {
         user_id: userId,
         username: profileData.username,
         display_name: profileData.display_name,
-        seed_type: profileData.seed_type || 'oak',
+        seed_type: profileData.seed_type || 'greenapple',
         ...profileData
       })
       .select();

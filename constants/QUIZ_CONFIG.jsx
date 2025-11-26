@@ -454,7 +454,7 @@ export const QUIZ_CONFIG = {
       traits: ['Gentle', 'Considerate', 'Empathetic', 'Nurturing'],
       scoreRange: '0-21'
     },
-    greenApple: {
+    greenapple: {
       name: 'The Green Apple',
       emoji: '🍏',
       description: 'Reliable, structured, grounded',

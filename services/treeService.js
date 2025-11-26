@@ -5,16 +5,16 @@ import { cooldownService } from "./cooldownService";
 import { messageService } from "./messageService";
 
 export const treeService = {
-  createTree: async (userId, fruitType = 'greenapple') => {
+  createTree: async (userId, fruitType = 'greenapple', quizCompleted = false) => {
   const { data, error } = await supabase
     .from('trees')
     .insert({
       user_id: userId,
-      tree_type: fruitType, // Changed from treeType parameter
+      tree_type: fruitType,
       mood_score: 0,
       stage: 'seed',
       is_public: false,
-      completed_quiz: false,
+      completed_quiz: quizCompleted, // Allow setting this on creation
       last_check_in: null
     })
     .select();

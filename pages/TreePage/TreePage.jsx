@@ -1,193 +1,225 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext/useAuth';
+import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
 import MoodTree from '../MoodTree';
 import QuizResult from '../../components/Quiz/QuizResult';
 import { Loading } from '../../components/Others/Loading';
-
-import './TreePage.css';
 import { userService } from '../../services/userService';
 import { treeService } from '../../services/treeService';
-import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
+
+import './TreePage.css';
 
 const TreePage = () => {
   const { user } = useAuth();
-  const currentUserId = user.id;
   const navigate = useNavigate();
-  const [currentTreeId, setCurrentTreeId] = useState(null);
-  const [currentTree, setCurrentTree] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
+  const { t } = useLanguage();
 
+  const [currentTree, setCurrentTree] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
-  const [treeLoaded, setTreeLoaded] = useState(false);
+  const [isProcessingQuizResult, setIsProcessingQuizResult] = useState(false);
 
-  const { t } = useLanguage();
-
-  useEffect(() => {
-    if (user && !treeLoaded) {
-      initializeUserData(user.id);
-    }
-  }, [user, treeLoaded]);
-
-  // Check if returning from quiz with result
+  // Check for pending quiz result ONCE on mount
   useEffect(() => {
     const storedResult = sessionStorage.getItem('quizResult');
     if (storedResult) {
-      setQuizResult(JSON.parse(storedResult));
-      sessionStorage.removeItem('quizResult');
+      try {
+        const parsed = JSON.parse(storedResult);
+        setQuizResult(parsed);
+      } catch (e) {
+        console.error("Failed to parse quiz result", e);
+        sessionStorage.removeItem('quizResult');
+      }
     }
-  }, []);
+  }, []); // Empty deps - only run once
 
-  const initializeUserData = async (currentUserId) => {
+  // Fetch User Data and Tree
+  const initializeUserData = useCallback(async (userId) => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Load or create user profile
-      let profile;
+
+      // A. Load or Create Profile
       try {
-        profile = await userService.getUserProfile(currentUserId);
+        await userService.getUserProfile(userId);
       } catch (err) {
-        // If profile doesn't exist, create it
-        profile = await userService.createUserProfile(currentUserId, {
+        await userService.createUserProfile(userId, {
           username: user.email?.split('@')[0] || 'user',
           display_name: user.email?.split('@')[0] || 'User',
-          seed_type: 'oak'
         });
       }
-      setUserProfile(profile);
 
-      // Load user trees
-      const trees = await treeService.getUserTrees(currentUserId);
+      // B. Load Trees
+      const trees = await treeService.getUserTrees(userId);
       
       if (trees && trees.length > 0) {
         const tree = trees[0];
-        setCurrentTreeId(tree.id);
         setCurrentTree(tree);
+
+        // C. Only redirect to quiz if:
+        // - Quiz not completed
+        // - No pending result
+        // - Not currently processing a result
+        const hasPendingResult = !!sessionStorage.getItem('quizResult');
         
-        // Check if user has completed the quiz
-        if (!tree.completed_quiz) {
-          // Navigate to quiz page for first time users
-          sessionStorage.setItem('quizAccess', 'firstTime');
+        if (!tree.completed_quiz && !hasPendingResult && !isProcessingQuizResult) {
+          console.log('Redirecting to quiz: Tree exists but quiz not done');
           navigate('/quiz');
+          return;
         }
       } else {
-        // Create a new tree for the user with their seed type
-        const newTree = await treeService.createTree(currentUserId, profile.seed_type);
-        setCurrentTreeId(newTree.id);
-        setCurrentTree(newTree);
-        // Navigate to quiz page for new users
+        // D. No Tree - Create and go to Quiz
+        console.log('No tree found, creating new and redirecting');
+        await treeService.createTree(userId, 'greenapple', false);
         sessionStorage.setItem('quizAccess', 'firstTime');
         navigate('/quiz');
+        return;
       }
-      
-      setTreeLoaded(true);
+
     } catch (err) {
-      console.error('Error initializing user data:', err);
+      console.error('Error loading tree data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, user, isProcessingQuizResult]);
 
+  // Initialize ONLY when user changes and NOT processing quiz result
+  useEffect(() => {
+    if (user?.id && !isProcessingQuizResult && !quizResult) {
+      initializeUserData(user.id);
+    }
+  }, [user?.id]); // Only depend on user.id
+
+  // Handle User clicking "Continue" on Quiz Result
   const handleStartTree = async () => {
+    console.log('🌳 handleStartTree called');
+    
+    if (!quizResult || !currentTree) {
+      console.error('❌ Missing quizResult or currentTree', { quizResult, currentTree });
+      return;
+    }
+
+    // Prevent re-entry
+    if (isProcessingQuizResult) {
+      console.log('⏸️ Already processing');
+      return;
+    }
+
     try {
-      if (currentTreeId && quizResult) {
-        const isRetaking = sessionStorage.getItem('isRetakingQuiz') === 'true';
+      setIsProcessingQuizResult(true);
+      console.log('🔄 Processing quiz result...');
+      
+      const isRetaking = sessionStorage.getItem('isRetakingQuiz') === 'true';
+      let updatedTree;
+
+      if (isRetaking) {
+        console.log('🔄 Resetting tree');
+        updatedTree = await treeService.resetTree(currentTree.id, quizResult.fruitType);
         
-        if (isRetaking) {
-          // Reset tree with new tree type
-          const updatedTree = await treeService.resetTree(currentTreeId, quizResult.fruitType);
-          setCurrentTree(updatedTree);
-          
-          // Update user profile seed type
-          await userService.updateUserProfile(user.id, { 
-            seed_type: quizResult.fruitType 
-          });
-          
-          sessionStorage.removeItem('isRetakingQuiz');
-        } else {
-          // First time completing quiz
-          const updatedTree = await treeService.markQuizCompleted(currentTreeId, quizResult.fruitType);
-          setCurrentTree(updatedTree);
-          
-          // Update user profile seed type
-          await userService.updateUserProfile(user.id, { 
-            seed_type: quizResult.fruitType 
-          });
-        }
+        await userService.updateUserProfile(user.id, { 
+          seed_type: quizResult.fruitType,
+          current_tree_id: updatedTree.id
+        });
+        
+        sessionStorage.removeItem('isRetakingQuiz');
+      } else {
+        console.log('✅ Marking quiz completed');
+        updatedTree = await treeService.markQuizCompleted(currentTree.id, quizResult.fruitType);
+        
+        await userService.updateUserProfile(user.id, { 
+          seed_type: quizResult.fruitType,
+          current_tree_id: currentTree.id
+        });
       }
+
+      console.log('✅ Tree updated successfully', updatedTree);
+
+      // Update tree state
+      setCurrentTree(updatedTree);
+      
+      // Clear quiz result - this will trigger the view change
+      sessionStorage.removeItem('quizResult');
+      sessionStorage.removeItem('justCompletedQuiz');
       setQuizResult(null);
+
+      console.log('✅ All done! Showing tree now');
+
     } catch (err) {
-      console.error('Error completing quiz:', err);
+      console.error('❌ Error starting tree:', err);
+      setError(err.message);
+    } finally {
+      setIsProcessingQuizResult(false);
     }
   };
 
   const handleRetakeQuiz = () => {
-    // Set flag for retaking quiz
     sessionStorage.setItem('quizAccess', 'retake');
     sessionStorage.setItem('isRetakingQuiz', 'true');
     navigate('/quiz');
   };
 
-  if (loading) {
-    return (
-      <div>
-        <Loading message={t('common.loading')} size="full" />
-      </div>
-    );
+  // --- RENDER ---
+
+  if (loading && !quizResult) {
+    return <Loading message={t('common.loading')} size="full" />;
   }
 
   if (error) {
     return (
       <div className="tree-page-error">
         <p>{error}</p>
-        <button className="retry-btn" onClick={() => initializeUserData(user.id)}>
+        <button className="retry-btn" onClick={() => window.location.reload()}>
           Retry
         </button>
       </div>
     );
   }
 
-  // Show quiz result
+  // PRIORITY 1: Show quiz result
   if (quizResult) {
+    if (!quizResult.fruitInfo || !quizResult.fruitType) {
+      return (
+        <div className="tree-page-error">
+          <p>Invalid quiz result data.</p>
+          <button className="retry-btn" onClick={handleRetakeQuiz}>Retake Quiz</button>
+        </div>
+      );
+    }
+
     return (
       <QuizResult 
         result={quizResult} 
         onContinue={handleStartTree}
+        onRetake={handleRetakeQuiz}
         isRetaking={sessionStorage.getItem('isRetakingQuiz') === 'true'}
+        isLoading={isProcessingQuizResult}
       />
     );
   }
 
-  if (!currentTreeId) {
+  // PRIORITY 2: Show the Tree
+  if (currentTree) {
     return (
-      <div className="tree-page-error">
-        <p>Unable to load tree</p>
-        <button className="retry-btn" onClick={() => initializeUserData(user.id)}>
-          Create New Tree
-        </button>
+      <div className='page-with-header'>
+        <div className="tree-page">
+          <MoodTree 
+            treeId={currentTree.id}
+            currentUserId={user.id}
+            isOwner={true}
+            treeData={currentTree}
+            onTreeUpdate={setCurrentTree}
+            onRetakeQuiz={handleRetakeQuiz}
+          />
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className='page-with-header'>
-      <div className="tree-page">
-        <MoodTree 
-          treeId={currentTreeId}
-          currentUserId={currentUserId}
-          isOwner={true}
-          treeData={currentTree}
-          onTreeUpdate={setCurrentTree}
-          onRetakeQuiz={handleRetakeQuiz}
-        />
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default TreePage;
