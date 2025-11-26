@@ -1,7 +1,5 @@
 import React, { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { Droplets, MessageCircle, Star, Share2, RotateCcw, Apple, Store } from 'lucide-react';
-import { DebugSpawnButton } from '../components/Fruit/SubComponents/FruitComponents.jsx';
-import { FruitImageTest } from '../components/Fruit/SubComponents/FruitComponents.jsx';
 import FruitInventory from '../components/Fruit/FruitInventory.jsx';
 import TreeVisualization from '../components/MoodTree/TreeVisualization.jsx';
 import HourlyEmotionLog from '../components/MoodTree/HourlyEmotionLog.jsx';
@@ -400,11 +398,6 @@ const MoodTree = ({ treeId, currentUserId, isOwner, treeData, onTreeUpdate, onRe
         >
           <Store size={20} />
         </button>
-      </div>
-
-      <div>
-        {<DebugSpawnButton treeId={treeId} />}
-        <FruitImageTest />
       </div>
 
       {/* Inventory modal */}

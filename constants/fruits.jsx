@@ -4,7 +4,7 @@ import pineappleImg from '../src/assets/fruit-icons/pineapple.png';
 import strawberryImg from '../src/assets/fruit-icons/strawberry.png';
 import cherryImg from '../src/assets/fruit-icons/cherry.png';
 import peachImg from '../src/assets/fruit-icons/peach.png';
-import mangoImg from '../src/assets/fruit-icons/peach.png';
+import mangoImg from '../src/assets/fruit-icons/mango.png';
 
 // Fruit images
 export const fruitImages = {

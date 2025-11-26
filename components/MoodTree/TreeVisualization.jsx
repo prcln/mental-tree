@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sun, Cloud, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import MessageDecoration from '../MessageComponents/MessageDecoration';
 import './TreeVisualization.css';
-import { fruitEmojis } from '../../constants/fruits';
+import { fruitEmojis, fruitImages } from '../../constants/fruits';
 import { pointsUntilNextStage } from '../../services/stageHelper';
 import { fruitService } from '../../services/fruitService';
 import { positionsTree, positionsTreeMobile } from '../../constants/tree';
@@ -14,8 +14,6 @@ import youngImg from '../../src/assets/tree_stages/young.svg';
 import matureImg from '../../src/assets/tree_stages/mature.svg';
 import bloomingImg from '../../src/assets/tree_stages/mature.svg';
 import GrassField from "../../src/assets/grassField.svg"
-
-
 
 const stageImages = {
   seed: seedImg,
@@ -39,6 +37,7 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
   const [collecting, setCollecting] = useState(null);
   const [collectionEffect, setCollectionEffect] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [imageErrors, setImageErrors] = useState({}); // Track image load failures
   
   // Track which fruit IDs we've already assigned positions to
   const assignedPositionsRef = useRef(new Map());
@@ -67,6 +66,12 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
   // Only show messages for which we have positions
   const visibleMessages = currentMessages.slice(0, messagePositions.length);
   const currentPositions = messagePositions.slice(0, visibleMessages.length);
+
+  // Handle fruit image error
+  const handleFruitImageError = (fruitType) => {
+    console.error(`[TREE_VIZ] Image failed for: ${fruitType}`);
+    setImageErrors(prev => ({ ...prev, [fruitType]: true }));
+  };
 
   // Sync external fruits with local state - preserve existing positions
   useEffect(() => {
@@ -203,6 +208,9 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
                   x: fruit.position_x,
                   y: fruit.position_y
                 };
+
+                // Check if we should use emoji or image
+                const useEmoji = imageErrors[fruit.fruit_type] || !fruitImages[fruit.fruit_type];
                 
                 return (
                   <button
@@ -217,7 +225,7 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
                       background: 'none',
                       border: 'none',
                       cursor: collecting === fruit.id ? 'not-allowed' : 'pointer',
-                      fontSize: '2rem',
+                      fontSize: useEmoji ? '2rem' : 'inherit',
                       zIndex: 15,
                       transition: 'all 0.3s ease',
                       animationName: collecting === fruit.id ? 'bounce' : 'sway',
@@ -230,7 +238,23 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
                     }}
                     title={`Collect ${fruit.fruit_type}`}
                   >
-                    {fruitEmojis[fruit.fruit_type] || '🍎'}
+                    {useEmoji ? (
+                      // Fallback to emoji if image fails or doesn't exist
+                      <span>{fruitEmojis[fruit.fruit_type] || '🍎'}</span>
+                    ) : (
+                      // Use image
+                      <img
+                        src={fruitImages[fruit.fruit_type]}
+                        alt={fruit.fruit_type}
+                        onError={() => handleFruitImageError(fruit.fruit_type)}
+                        style={{
+                          width: '64px',
+                          height: '64px',
+                          objectFit: 'contain',
+                          filter: collecting === fruit.id ? 'brightness(1.2)' : 'none'
+                        }}
+                      />
+                    )}
                   </button>
                 );
               })}
