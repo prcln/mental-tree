@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PersonalityQuiz from '../components/Quiz/Quiz';
-import QuizResult from '../components/Quiz/QuizResult';
 import './QuizPage.css';
 
 const QuizPage = () => {
   const navigate = useNavigate();
-  const [quizResult, setQuizResult] = useState(null);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [showQuestionCard, setShowQuestionCard] = useState(true);
 
@@ -14,31 +12,23 @@ const QuizPage = () => {
     // Check if user has permission to access quiz
     const quizAccess = sessionStorage.getItem('quizAccess');
     
-    if (!quizAccess || (quizAccess !== 'firstTime' && quizAccess !== 'retake')) {
+    if (!quizAccess || (quizAccess !== 'firstTime' && quizAccess !== 'retake' && quizAccess !== 'resume')) {
       // User doesn't have permission, redirect to tree page
       navigate('/tree', { replace: true });
     }
   }, [navigate]);
 
   const handleQuizComplete = (result) => {
-    // Show result page first
-    setQuizResult(result);
-  };
-
-  const handleContinue = () => {
-    // Store result in sessionStorage (keep original structure)
-    sessionStorage.setItem('quizResult', JSON.stringify(quizResult));
+    console.log('Quiz completed, storing result and navigating to tree');
+    
+    // Store result in sessionStorage
+    sessionStorage.setItem('quizResult', JSON.stringify(result));
     
     // Clear quiz access permission
     sessionStorage.removeItem('quizAccess');
     
-    // Navigate back to tree page
+    // Navigate to tree page immediately - TreePage will show the result
     navigate('/tree');
-  };
-
-  const handleRetake = () => {
-    // Clear the quiz result to go back to quiz
-    setQuizResult(null);
   };
 
   const toggleAnimations = () => {
@@ -48,17 +38,6 @@ const QuizPage = () => {
   const toggleQuestionCard = () => {
     setShowQuestionCard(!showQuestionCard);
   };
-
-  // Show result page
-  if (quizResult) {
-    return (
-      <QuizResult 
-        result={quizResult} 
-        onContinue={handleContinue}
-        onRetake={handleRetake}
-      />
-    );
-  }
 
   return (
     <div className={`quiz-page ${!animationsEnabled ? 'no-animations' : ''}`}>

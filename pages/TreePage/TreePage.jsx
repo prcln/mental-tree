@@ -59,14 +59,13 @@ const TreePage = () => {
         const tree = trees[0];
         setCurrentTree(tree);
 
-        // C. Only redirect to quiz if:
-        // - Quiz not completed
-        // - No pending result
-        // - Not currently processing a result
+        // C. Check if quiz is completed from DB (not sessionStorage)
         const hasPendingResult = !!sessionStorage.getItem('quizResult');
         
+        // Only redirect to quiz if quiz not completed in DB AND no pending result
         if (!tree.completed_quiz && !hasPendingResult && !isProcessingQuizResult) {
-          console.log('Redirecting to quiz: Tree exists but quiz not done');
+          console.log('Redirecting to quiz: Tree exists but quiz not completed in DB');
+          sessionStorage.setItem('quizAccess', 'resume'); // Allow access to resume quiz
           navigate('/quiz');
           return;
         }
@@ -127,7 +126,8 @@ const TreePage = () => {
         
         sessionStorage.removeItem('isRetakingQuiz');
       } else {
-        console.log('✅ Marking quiz completed');
+        console.log('✅ Marking quiz completed in DB');
+        // This will update completed_quiz to true in the database
         updatedTree = await treeService.markQuizCompleted(currentTree.id, quizResult.fruitType);
         
         await userService.updateUserProfile(user.id, { 
@@ -138,13 +138,13 @@ const TreePage = () => {
 
       console.log('✅ Tree updated successfully', updatedTree);
 
-      // Update tree state
-      setCurrentTree(updatedTree);
-      
-      // Clear quiz result - this will trigger the view change
+      // Clear quiz result FIRST, then update tree state
       sessionStorage.removeItem('quizResult');
       sessionStorage.removeItem('justCompletedQuiz');
+      
+      // Update states together to trigger single re-render
       setQuizResult(null);
+      setCurrentTree(updatedTree);
 
       console.log('✅ All done! Showing tree now');
 
