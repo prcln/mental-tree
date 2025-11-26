@@ -12,6 +12,7 @@ import {
   ConfirmationModal 
 } from "./SubComponents/FruitComponents.jsx";
 import { TABS, SEARCH_FILTERS, FRUIT_TYPES } from './constants.js';
+import { fruitImages, fruitEmojis } from '../../constants/fruits';
 import { X, ShoppingBag, Plus, Package } from 'lucide-react';
 import './FruitTrade.css';
 
@@ -24,6 +25,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
     trade: null,
     type: null
   });
+  const [imageErrors, setImageErrors] = useState({});
 
   // Separate state for each data type - load once and keep in memory
   const [inventory, setInventory] = useState([]);
@@ -42,6 +44,45 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
     resetForm,
     maxQuantities
   } = useTradeForm(inventory);
+
+  // Handle fruit image error
+  const handleFruitImageError = useCallback((fruitType) => {
+    setImageErrors(prev => ({ ...prev, [fruitType]: true }));
+  }, []);
+
+  // Render fruit with image or emoji fallback
+  const renderFruit = useCallback((fruitType, size = 'md') => {
+    const useEmoji = imageErrors[fruitType] || !fruitImages[fruitType];
+    
+    const sizeClasses = {
+      sm: 'w-6 h-6 sm:w-8 sm:h-8',
+      md: 'w-10 h-10 sm:w-12 sm:h-12',
+      lg: 'w-14 h-14 sm:w-16 sm:h-16'
+    };
+
+    const textSizeClasses = {
+      sm: 'text-xl sm:text-2xl',
+      md: 'text-3xl sm:text-4xl',
+      lg: 'text-4xl sm:text-5xl'
+    };
+
+    if (useEmoji) {
+      return (
+        <span className={textSizeClasses[size]}>
+          {fruitEmojis[fruitType] || '🍎'}
+        </span>
+      );
+    }
+
+    return (
+      <img 
+        src={fruitImages[fruitType]}
+        alt={fruitType}
+        className={`${sizeClasses[size]} object-contain`}
+        onError={() => handleFruitImageError(fruitType)}
+      />
+    );
+  }, [imageErrors, handleFruitImageError]);
 
   // Load all data once on mount
   const loadData = useCallback(async () => {
@@ -75,7 +116,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
     try {
       await fruitService.acceptTradeOffer(tradeId, userId);
       setConfirmModal({ isOpen: false, trade: null, type: null });
-      await loadData(); // Reload to get fresh data
+      await loadData();
       onTradeComplete?.();
     } catch (err) {
       alert(err.message || 'Failed to accept trade');
@@ -86,7 +127,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
     try {
       await fruitService.cancelTradeOffer(tradeId, userId);
       setConfirmModal({ isOpen: false, trade: null, type: null });
-      await loadData(); // Reload to get fresh data
+      await loadData();
     } catch (err) {
       alert(err.message || 'Failed to cancel trade');
     }
@@ -114,7 +155,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
       );
       resetForm();
       setActiveTab(TABS.MY_TRADES);
-      await loadData(); // Reload to get fresh data
+      await loadData();
     } catch (err) {
       alert(err.message || 'Failed to create trade offer');
     }
@@ -212,6 +253,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
                       key={trade.id}
                       trade={trade}
                       onAccept={openAcceptConfirmation}
+                      renderFruit={renderFruit}
                     />
                   ))}
                 </div>
@@ -232,7 +274,10 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
 
                 <div className="section">
                   <h3>Your Inventory</h3>
-                  <InventoryGrid inventory={inventory} />
+                  <InventoryGrid 
+                    inventory={inventory}
+                    renderFruit={renderFruit}
+                  />
                 </div>
 
                 <div className="section">
@@ -242,6 +287,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
                     values={offeredFruits}
                     onChange={(name, qty) => updateFruits('offer', name, qty)}
                     maxQuantities={maxQuantities}
+                    renderFruit={renderFruit}
                   />
                 </div>
 
@@ -251,6 +297,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
                     fruits={FRUIT_TYPES}
                     values={requestedFruits}
                     onChange={(name, qty) => updateFruits('request', name, qty)}
+                    renderFruit={renderFruit}
                   />
                 </div>
 
@@ -275,6 +322,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
                       trade={trade}
                       onCancel={openCancelConfirmation}
                       isMyTrade
+                      renderFruit={renderFruit}
                     />
                   ))}
                 </div>
@@ -297,6 +345,7 @@ const FruitTrade = ({ userId, onClose, onTradeComplete }) => {
           }
         }}
         onCancel={closeConfirmation}
+        renderFruit={renderFruit}
       />
     </div>
   );

@@ -5,7 +5,7 @@ import './TreeVisualization.css';
 import { fruitEmojis } from '../../constants/fruits';
 import { pointsUntilNextStage } from '../../services/stageHelper';
 import { fruitService } from '../../services/fruitService';
-import { positionsTree } from '../../constants/tree';
+import { positionsTree, positionsTreeMobile } from '../../constants/tree';
 
 import seedImg from '../../src/assets/tree_stages/seed.svg';
 import sproutImg from '../../src/assets/tree_stages/sprout.svg';
@@ -14,6 +14,8 @@ import youngImg from '../../src/assets/tree_stages/young.svg';
 import matureImg from '../../src/assets/tree_stages/mature.svg';
 import bloomingImg from '../../src/assets/tree_stages/mature.svg';
 import GrassField from "../../src/assets/grassField.svg"
+
+
 
 const stageImages = {
   seed: seedImg,
@@ -26,7 +28,9 @@ const stageImages = {
 
 // Stage-specific message positions
 const getMessagePositions = (stage) => {
-  return positionsTree[stage] || [];
+  const isMobile = window.innerWidth <= 768;
+  const positions = isMobile ? positionsTreeMobile : positionsTree;
+  return positions[stage] || [];
 };
 
 const TreeVisualization = ({ currentStage, messages, moodScore, treeType, currentUserId, fruits: externalFruits, onFruitCollect }) => {
@@ -34,9 +38,19 @@ const TreeVisualization = ({ currentStage, messages, moodScore, treeType, curren
   const [fruits, setFruits] = useState([]);
   const [collecting, setCollecting] = useState(null);
   const [collectionEffect, setCollectionEffect] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   
   // Track which fruit IDs we've already assigned positions to
   const assignedPositionsRef = useRef(new Map());
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const messagePositions = getMessagePositions(currentStage);
   const StageImage = stageImages[currentStage];

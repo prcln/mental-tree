@@ -1,11 +1,13 @@
 import { X, TrendingUp, Clock, Search } from 'lucide-react';
-import { TABS, SEARCH_FILTERS, EXPIRATION_OPTIONS, FRUIT_TYPES, FRUIT_EMOJI_MAP, REQUEST_TIMEOUT, AUTO_REFRESH_INTERVAL } from '../constants.js'
+import { TABS, SEARCH_FILTERS, EXPIRATION_OPTIONS, FRUIT_TYPES, REQUEST_TIMEOUT, AUTO_REFRESH_INTERVAL } from '../constants.js'
+import { getTimeRemaining, getTradeUsername } from '../fruitUtil.jsx';
+import React, { useState } from 'react';
+import { fruitService } from '../../../services/fruitService.js';
+import { fruitImages, fruitEmojis } from '../../../constants/fruits.jsx';
 
-import { getTimeRemaining, getTradeUsername, getFruitEmoji } from '../fruitUtil.jsx';
-
-const FruitBadge = ({ name, quantity }) => (
+const FruitBadge = ({ name, quantity, renderFruitFn }) => (
   <div className="fruit-badge">
-    <span className="fruit-icon">{getFruitEmoji(name)}</span>
+    <span className="fruit-icon">{renderFruitFn(name, 'sm')}</span>
     <span className="fruit-name">{name}</span>
     <span className="fruit-qty">×{quantity}</span>
   </div>
@@ -50,7 +52,7 @@ const SearchFilters = ({ activeFilter, onFilterChange }) => (
   </div>
 );
 
-const TradeCard = ({ trade, onAccept, onCancel, showActions = true, isMyTrade = false }) => (
+const TradeCard = ({ trade, onAccept, onCancel, showActions = true, isMyTrade = false, renderFruit }) => (
   <div className={`trade-card ${trade.status}`}>
     <div className="trade-header-row">
       {isMyTrade ? (
@@ -67,7 +69,6 @@ const TradeCard = ({ trade, onAccept, onCancel, showActions = true, isMyTrade = 
           <TradeTimer expiresAt={trade.expires_at} />
         </>
       )}
-
     </div>
     
     <div className="trade-exchange">
@@ -75,7 +76,7 @@ const TradeCard = ({ trade, onAccept, onCancel, showActions = true, isMyTrade = 
         <h4>Offering:</h4>
         <div className="fruits-list">
           {Object.entries(trade.offered_fruits).map(([name, qty]) => (
-            <FruitBadge key={name} name={name} quantity={qty} />
+            <FruitBadge key={name} name={name} quantity={qty} renderFruitFn={renderFruit} />
           ))}
         </div>
       </div>
@@ -88,7 +89,7 @@ const TradeCard = ({ trade, onAccept, onCancel, showActions = true, isMyTrade = 
         <h4>Requesting:</h4>
         <div className="fruits-list">
           {Object.entries(trade.requested_fruits).map(([name, qty]) => (
-            <FruitBadge key={name} name={name} quantity={qty} />
+            <FruitBadge key={name} name={name} quantity={qty} renderFruitFn={renderFruit} />
           ))}
         </div>
       </div>
@@ -126,11 +127,11 @@ const EmptyState = ({ searchQuery, onClearSearch }) => (
   </div>
 );
 
-const InventoryGrid = ({ inventory }) => (
+const InventoryGrid = ({ inventory, renderFruit }) => (
   <div className="inventory-grid">
     {inventory.map(item => (
       <div key={item.item_name} className="inventory-item">
-        <span className="fruit-icon">{getFruitEmoji(item.item_name)}</span>
+        <span className="fruit-icon">{renderFruit(item.item_name, 'sm')}</span>
         <span className="fruit-name">{item.item_name}</span>
         <span className="fruit-qty">×{item.quantity}</span>
       </div>
@@ -138,9 +139,7 @@ const InventoryGrid = ({ inventory }) => (
   </div>
 );
 
-
-
-const FruitSelector = ({ fruits, values, onChange, maxQuantities = {} }) => (
+const FruitSelector = ({ fruits, values, onChange, maxQuantities = {}, renderFruit }) => (
   <div className="fruit-selection">
     {fruits.map(fruit => {
       const fruitName = typeof fruit === 'string' ? fruit : fruit.item_name;
@@ -148,7 +147,7 @@ const FruitSelector = ({ fruits, values, onChange, maxQuantities = {} }) => (
       
       return (
         <div key={fruitName} className="fruit-selector">
-          <span className="fruit-icon">{getFruitEmoji(fruitName)}</span>
+          <span className="fruit-icon">{renderFruit(fruitName, 'sm')}</span>
           <span>{fruitName}</span>
           <input
             type="number"
@@ -181,7 +180,7 @@ const ExpirationSelector = ({ value, onChange }) => (
   </div>
 );
 
-const ConfirmationModal = ({ isOpen, onConfirm, onCancel, trade, type = 'accept' }) => {
+const ConfirmationModal = ({ isOpen, onConfirm, onCancel, trade, type = 'accept', renderFruit }) => {
   if (!isOpen || !trade) return null;
 
   const isAccept = type === 'accept';
@@ -214,7 +213,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, trade, type = 'accept'
               <h4>You'll Give:</h4>
               <div className="fruits-list">
                 {Object.entries(isAccept ? requestedFruits : offeredFruits).map(([name, qty]) => (
-                  <FruitBadge key={name} name={name} quantity={qty} />
+                  <FruitBadge key={name} name={name} quantity={qty} renderFruitFn={renderFruit} />
                 ))}
               </div>
             </div>
@@ -227,7 +226,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, trade, type = 'accept'
                   <h4>You'll Receive:</h4>
                   <div className="fruits-list">
                     {Object.entries(offeredFruits).map(([name, qty]) => (
-                      <FruitBadge key={name} name={name} quantity={qty} />
+                      <FruitBadge key={name} name={name} quantity={qty} renderFruitFn={renderFruit} />
                     ))}
                   </div>
                 </div>
@@ -249,4 +248,75 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, trade, type = 'accept'
   );
 };
 
-export { FruitBadge, TradeTimer, TradeCard, SearchBar, SearchFilters, EmptyState, InventoryGrid, FruitSelector, ExpirationSelector, ConfirmationModal }
+const DebugSpawnButton = ({ treeId }) => {
+  const [spawning, setSpawning] = useState(false);
+
+  const handleTestSpawn = async () => {
+    setSpawning(true);
+    try {
+      // Spawn multiple fruits for testing
+      for (let i = 0; i < 3; i++) {
+        await fruitService.spawnFruits(treeId);
+        await new Promise(resolve => setTimeout(resolve, 200)); // Small delay
+      }
+      alert('Test fruits spawned! Refresh to see them.');
+      window.location.reload();
+    } catch (error) {
+      console.error('Test spawn failed:', error);
+      alert('Failed to spawn test fruits: ' + error.message);
+    } finally {
+      setSpawning(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleTestSpawn}
+      disabled={spawning}
+      className="fixed bottom-4 right-4 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-600 disabled:opacity-50 z-50"
+    >
+      {spawning ? '🌀 Spawning...' : '🍎 Test Spawn Fruits'}
+    </button>
+  );
+};
+
+
+
+const FruitImageTest = () => {
+  return (
+    <div style={{ padding: '20px', backgroundColor: 'white' }}>
+      <h2>Fruit Image Test</h2>
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+        {Object.entries(fruitImages).map(([fruitType, imgSrc]) => (
+          <div key={fruitType} style={{ textAlign: 'center', border: '1px solid #ccc', padding: '10px' }}>
+            <p><strong>{fruitType}</strong></p>
+            <p style={{ fontSize: '12px', color: 'gray', wordBreak: 'break-all', maxWidth: '150px' }}>
+              {imgSrc || 'undefined'}
+            </p>
+            {imgSrc ? (
+              <img 
+                src={imgSrc} 
+                alt={fruitType}
+                style={{ width: '64px', height: '64px', objectFit: 'contain' }}
+                onError={(e) => {
+                  console.error(`Failed to load ${fruitType}:`, imgSrc);
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+            ) : (
+              <div style={{ fontSize: '48px' }}>❌</div>
+            )}
+            <div style={{ fontSize: '48px', display: 'none' }}>
+              {fruitEmojis[fruitType]}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+
+export { FruitBadge, FruitImageTest, TradeTimer, TradeCard, SearchBar, SearchFilters, EmptyState, InventoryGrid, FruitSelector, ExpirationSelector, ConfirmationModal, DebugSpawnButton };

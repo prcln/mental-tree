@@ -2,34 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { fruitService } from '../../services/fruitService';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext/AuthContext';
-
-// Import fruit images
-import greenappleImg from '../../assets/fruits/greenapple.png';
-import pineappleImg from '../../assets/fruits/pineapple.png';
-import strawberryImg from '../../assets/fruits/strawberry.png';
-import cherryImg from '../../assets/fruits/cherry.png';
-import peachImg from '../../assets/fruits/peach.png';
-import mangoImg from '../../assets/fruits/mango.png';
-
-// Map fruit types to images
-const fruitImages = {
-  greenapple: greenappleImg,
-  pineapple: pineappleImg,
-  strawberry: strawberryImg,
-  cherry: cherryImg,
-  peach: peachImg,
-  mango: mangoImg
-};
-
-// Fallback emojis if images fail to load
-const fruitEmojis = {
-  greenapple: '🍏',
-  pineapple: '🍍',
-  strawberry: '🍓',
-  cherry: '🍒',
-  peach: '🍑',
-  mango: '🥭'
-};
+import { fruitImages, fruitEmojis } from '../../constants/fruits';
 
 const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
   const [fruits, setFruits] = useState([]);
@@ -42,10 +15,21 @@ const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
   // Check interval ref
   const spawnCheckIntervalRef = useRef(null);
 
+  // DEBUG: Log what's imported
+  useEffect(() => {
+    console.log('=== FRUIT IMAGES DEBUG ===');
+    console.log('fruitImages:', fruitImages);
+    console.log('fruitEmojis:', fruitEmojis);
+    console.log('Keys in fruitImages:', Object.keys(fruitImages));
+    console.log('========================');
+  }, []);
+
   const loadFruits = useCallback(async () => {
     if (!treeId) return;
     try {
       const data = await fruitService.getTreeFruits(treeId);
+      console.log('[FRUIT_DISPLAY] Loaded fruits:', data);
+      console.log('[FRUIT_DISPLAY] Fruit types:', data.map(f => f.fruit_type));
       setFruits(data);
     } catch (error) {
       console.error('Error loading fruits:', error);
@@ -55,6 +39,7 @@ const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
   const checkAndSpawnFruits = useCallback(async () => {
     try {
       const shouldSpawn = await fruitService.shouldSpawnFruits(treeId);
+      console.log('[FRUIT_DISPLAY] Should spawn?', shouldSpawn);
       if (shouldSpawn) {
         await fruitService.spawnFruits(treeId);
         await loadFruits();
@@ -126,71 +111,90 @@ const FruitDisplay = ({ treeId, currentUserId, onCollect }) => {
   };
 
   const handleImageError = (fruitType) => {
+    console.error(`[FRUIT_DISPLAY] Image failed to load for: ${fruitType}`);
+    console.error(`[FRUIT_DISPLAY] Image path was:`, fruitImages[fruitType]);
     setImageErrors(prev => ({ ...prev, [fruitType]: true }));
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
-      {fruits.map(fruit => {
-        const useEmoji = imageErrors[fruit.fruit_type];
-        
-        return (
-          <div
-            key={fruit.id}
-            className="absolute pointer-events-auto"
-            style={{
-              left: `${fruit.position_x}%`,
-              top: `${fruit.position_y}%`,
-              transform: 'translate(-50%, -50%)'
-            }}
-          >
-            <button
-              onClick={() => handleCollect(fruit.id, fruit.fruit_type)}
-              disabled={collecting === fruit.id}
-              className={`
-                transition-all duration-300 hover:scale-125
-                ${collecting === fruit.id ? 'animate-bounce' : 'animate-sway'}
-                cursor-pointer hover:drop-shadow-lg
-                disabled:opacity-50 disabled:cursor-not-allowed
-                focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2
-                rounded-full
-              `}
-              title={`Collect ${fruit.fruit_type}`}
-              aria-label={`Collect ${fruit.fruit_type} fruit`}
-            >
-              {useEmoji ? (
-                // Fallback to emoji if image fails
-                <span className="text-4xl block">
-                  {fruitEmojis[fruit.fruit_type] || '🍎'}
-                </span>
-              ) : (
-                // Use image
-                <img
-                  src={fruitImages[fruit.fruit_type]}
-                  alt={fruit.fruit_type}
-                  onError={() => handleImageError(fruit.fruit_type)}
-                  className="w-16 h-16 object-contain drop-shadow-md"
-                  style={{
-                    filter: collecting === fruit.id ? 'brightness(1.2)' : 'none'
-                  }}
-                />
-              )}
-            </button>
-          </div>
-        );
-      })}
+  <div className="absolute inset-0 pointer-events-none">
+    {fruits.map(fruit => {
+      // Normalize fruit type: remove spaces, underscores, lowercase
+      const normalizedType = fruit.fruit_type
+        ?.toLowerCase()
+        .replace(/[\s_-]/g, ''); // Remove spaces, underscores, hyphens
       
-      <style jsx>{`
-        @keyframes sway {
-          0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
-          50% { transform: translate(-50%, -50%) rotate(5deg); }
-        }
-        .animate-sway {
-          animation: sway 3s ease-in-out infinite;
-        }
-      `}</style>
-    </div>
-  );
+      const hasImage = !!fruitImages[normalizedType];
+      const hasError = imageErrors[normalizedType];
+      const useEmoji = hasError || !hasImage;
+      
+      // DEBUG: Log each fruit rendering decision
+      console.log(`[FRUIT_DISPLAY] Rendering ${fruit.fruit_type}:`, {
+        originalType: fruit.fruit_type,
+        normalizedType,
+        hasImage,
+        imagePath: fruitImages[normalizedType],
+        hasError,
+        useEmoji,
+        availableKeys: Object.keys(fruitImages)
+      });
+      
+      return (
+        <div
+          key={fruit.id}
+          className="absolute pointer-events-auto"
+          style={{
+            left: `${fruit.position_x}%`,
+            top: `${fruit.position_y}%`,
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          <button
+            onClick={() => handleCollect(fruit.id, fruit.fruit_type)}
+            disabled={collecting === fruit.id}
+            className={`
+              transition-all duration-300 hover:scale-125
+              ${collecting === fruit.id ? 'animate-bounce' : 'animate-sway'}
+              cursor-pointer hover:drop-shadow-lg
+              disabled:opacity-50 disabled:cursor-not-allowed
+              focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2
+              rounded-full
+            `}
+            title={`Collect ${fruit.fruit_type}`}
+            aria-label={`Collect ${fruit.fruit_type} fruit`}
+          >
+            {useEmoji ? (
+              <span className="text-4xl block">
+                {fruitEmojis[normalizedType] || '🍎'}
+              </span>
+            ) : (
+              <img
+                src={fruitImages[normalizedType]}
+                alt={fruit.fruit_type}
+                onError={() => handleImageError(normalizedType)}
+                className="w-16 h-16 object-contain drop-shadow-md"
+                style={{
+                  filter: collecting === fruit.id ? 'brightness(1.2)' : 'none'
+                }}
+                onLoad={() => console.log(`[FRUIT_DISPLAY] ✅ Image loaded for ${fruit.fruit_type} (${normalizedType})`)}
+              />
+            )}
+          </button>
+        </div>
+      );
+    })}
+    
+    <style jsx>{`
+      @keyframes sway {
+        0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
+        50% { transform: translate(-50%, -50%) rotate(5deg); }
+      }
+      .animate-sway {
+        animation: sway 3s ease-in-out infinite;
+      }
+    `}</style>
+  </div>
+);
 };
 
 export default FruitDisplay;

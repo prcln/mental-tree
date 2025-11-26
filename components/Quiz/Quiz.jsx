@@ -173,7 +173,7 @@ const PersonalityQuiz = ({ onComplete, animationsEnabled = true, showCard = true
     if (totalScore <= 40) return 'mango';
     if (totalScore <= 50) return 'strawberry';
     if (totalScore <= 60) return 'pineapple';
-    return 'grapes';
+    return 'cherry';
   };
 
   const handleAnswer = (option) => {

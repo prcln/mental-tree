@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Sparkles } from 'lucide-react';
 import { fruitService } from '../../services/fruitService';
-import { fruitEmojis, rarityColors } from '../../constants/fruits';
+import { fruitEmojis, fruitImages, rarityColors } from '../../constants/fruits';
 import { useLanguage } from '../../contexts/LanguageContext/LanguageContext';
 
 const FruitInventory = ({ userId, onClose }) => {
@@ -12,6 +12,7 @@ const FruitInventory = ({ userId, onClose }) => {
   const [userCollectibles, setUserCollectibles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exchanging, setExchanging] = useState(null);
+  const [imageErrors, setImageErrors] = useState({}); // Track failed image loads
 
   useEffect(() => {
     loadData();
@@ -61,18 +62,57 @@ const FruitInventory = ({ userId, onClose }) => {
     );
   };
 
-  // Helper function to render collectible image or icon
-  const renderCollectibleImage = (imageUrl, size = 'md') => {
+  // Handle fruit image error
+  const handleFruitImageError = (fruitType) => {
+    setImageErrors(prev => ({ ...prev, [fruitType]: true }));
+  };
+
+  // Render fruit with image or emoji fallback
+  const renderFruit = (fruitType, size = 'md') => {
+    const useEmoji = imageErrors[fruitType] || !fruitImages[fruitType];
+    
     const sizeClasses = {
       sm: 'w-8 h-8 sm:w-10 sm:h-10',
-      md: 'w-12 h-12 sm:w-16 sm:h-16',
-      lg: 'w-16 h-16 sm:w-20 sm:h-20'
+      md: 'w-16 h-16 sm:w-20 sm:h-20',
+      lg: 'w-20 h-20 sm:w-24 sm:h-24'
     };
 
     const textSizeClasses = {
       sm: 'text-2xl sm:text-3xl',
-      md: 'text-3xl sm:text-5xl',
-      lg: 'text-4xl sm:text-6xl'
+      md: 'text-4xl sm:text-6xl',
+      lg: 'text-5xl sm:text-7xl'
+    };
+
+    if (useEmoji) {
+      return (
+        <div className={textSizeClasses[size]}>
+          {fruitEmojis[fruitType] || '🍎'}
+        </div>
+      );
+    }
+
+    return (
+      <img 
+        src={fruitImages[fruitType]}
+        alt={fruitType}
+        className={`${sizeClasses[size]} object-contain`}
+        onError={() => handleFruitImageError(fruitType)}
+      />
+    );
+  };
+
+  // Helper function to render collectible image or icon
+  const renderCollectibleImage = (imageUrl, size = 'md') => {
+    const sizeClasses = {
+      sm: 'w-10 h-10 sm:w-12 sm:h-12',
+      md: 'w-16 h-16 sm:w-20 sm:h-20',
+      lg: 'w-20 h-20 sm:w-24 sm:h-24'
+    };
+
+    const textSizeClasses = {
+      sm: 'text-3xl sm:text-4xl',
+      md: 'text-4xl sm:text-6xl',
+      lg: 'text-5xl sm:text-7xl'
     };
 
     // Check if it's a valid string
@@ -181,15 +221,15 @@ const FruitInventory = ({ userId, onClose }) => {
                 inventory.map(item => (
                   <div
                     key={item.id}
-                    className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-2 sm:p-4 text-center border-2 border-green-200"
+                    className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg sm:rounded-xl p-3 sm:p-4 text-center border-2 border-green-200"
                   >
-                    <div className="text-3xl sm:text-5xl mb-1 sm:mb-2">
-                      {fruitEmojis[item.item_name] || '🍎'}
+                    <div className="flex items-center justify-center mb-2 sm:mb-3">
+                      {renderFruit(item.item_name, 'md')}
                     </div>
                     <div className="font-semibold text-gray-800 capitalize text-xs sm:text-base">
                       {item.item_name}
                     </div>
-                    <div className="text-lg sm:text-2xl font-bold text-green-600 mt-0.5 sm:mt-1">
+                    <div className="text-lg sm:text-2xl font-bold text-green-600 mt-1 sm:mt-2">
                       ×{item.quantity}
                     </div>
                   </div>
@@ -218,7 +258,7 @@ const FruitInventory = ({ userId, onClose }) => {
                       <div className="flex-shrink-0 flex items-center justify-center">
                         {renderCollectibleImage(collectible.image_url, 'md')}
                         {/* Fallback emoji if image fails */}
-                        <div className="hidden text-3xl sm:text-5xl">✨</div>
+                        <div className="hidden text-4xl sm:text-6xl">✨</div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-sm sm:text-lg truncate sm:whitespace-normal">
@@ -237,7 +277,10 @@ const FruitInventory = ({ userId, onClose }) => {
                                 key={fruit}
                                 className="inline-flex items-center gap-1 bg-white/50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm"
                               >
-                                {fruitEmojis[fruit]} ×{cost}
+                                <span className="inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8">
+                                  {renderFruit(fruit, 'sm')}
+                                </span>
+                                ×{cost}
                               </span>
                             )
                           )}
@@ -294,7 +337,7 @@ const FruitInventory = ({ userId, onClose }) => {
                       <div className="flex-shrink-0 flex items-center justify-center">
                         {renderCollectibleImage(item.collectible.image_url, 'md')}
                         {/* Fallback emoji if image fails */}
-                        <div className="hidden text-3xl sm:text-5xl">✨</div>
+                        <div className="hidden text-4xl sm:text-6xl">✨</div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-sm sm:text-lg truncate sm:whitespace-normal">

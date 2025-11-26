@@ -77,6 +77,7 @@
   position: absolute;
   inset: 0; /* Covers the entire tree-visual area */
   pointer-events: none;
+  overflow: visible; /* Allow overflow for now, will scale on mobile */
 }
 
 /* Messages Layer */
@@ -84,6 +85,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  transition: transform 0.3s ease;
 }
 
 .messages-layer > div {
@@ -280,14 +282,21 @@
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .tree-wrapper {
-    max-width: 500px;
+    width: 500px;
+    height: 500px;
+  }
+  
+  /* Scale messages slightly on tablets */
+  .messages-layer {
+    transform: scale(0.9);
+    transform-origin: center center;
   }
 }
 
 @media (max-width: 768px) {
   .tree-wrapper {
-    width: 90%;
-    max-width: 400px;
+    width: 400px;
+    height: 400px;
   }
 
   .tree-stage-info {
@@ -317,11 +326,43 @@
   .fruits-layer button {
     font-size: 1.5rem;
   }
+  
+  /* Scale messages more on mobile */
+  .messages-layer {
+    transform: scale(0.75);
+    transform-origin: center center;
+  }
+  
+  /* Reduce tree stage heights for mobile */
+  .tree-stage-seed .tree-svg {
+    height: 100px;
+  }
+
+  .tree-stage-sprout .tree-svg {
+    height: 160px;
+  }
+
+  .tree-stage-sapling .tree-svg {
+    height: 280px;
+  }
+
+  .tree-stage-young .tree-svg {
+    height: 360px;
+  }
+
+  .tree-stage-mature .tree-svg {
+    height: 420px;
+  }
+
+  .tree-stage-blooming .tree-svg {
+    height: 480px;
+  }
 }
 
 @media (max-width: 480px) {
   .tree-wrapper {
-    max-width: 320px;
+    width: 320px;
+    height: 320px;
   }
 
   .tree-stage-info {
@@ -338,6 +379,41 @@
 
   .stage-levelup {
     font-size: 0.625rem;
+  }
+  
+  /* Scale messages even more on small mobile */
+  .messages-layer {
+    transform: scale(0.6);
+    transform-origin: center center;
+  }
+  
+  /* Further reduce tree stage heights for small mobile */
+  .tree-stage-seed .tree-svg {
+    height: 80px;
+  }
+
+  .tree-stage-sprout .tree-svg {
+    height: 130px;
+  }
+
+  .tree-stage-sapling .tree-svg {
+    height: 220px;
+  }
+
+  .tree-stage-young .tree-svg {
+    height: 280px;
+  }
+
+  .tree-stage-mature .tree-svg {
+    height: 320px;
+  }
+
+  .tree-stage-blooming .tree-svg {
+    height: 380px;
+  }
+  
+  .fruits-layer button {
+    font-size: 1.25rem;
   }
 }
 

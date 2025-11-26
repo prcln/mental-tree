@@ -1,12 +1,12 @@
 // Import fruit images
-import greenappleImg from '../public/fruit-icons/greenapple.png';
-import pineappleImg from '../public/fruit-icons/pineapple.png';
-import strawberryImg from '../public/fruit-icons/strawberry.png';
-import cherryImg from '../public/fruit-icons/cherry.png';
-import peachImg from '../public/fruit-icons/peach.png';
-import mangoImg from '../public/fruit-icons/peach.png';
+import greenappleImg from '../src/assets/fruit-icons/greenapple.png';
+import pineappleImg from '../src/assets/fruit-icons/pineapple.png';
+import strawberryImg from '../src/assets/fruit-icons/strawberry.png';
+import cherryImg from '../src/assets/fruit-icons/cherry.png';
+import peachImg from '../src/assets/fruit-icons/peach.png';
+import mangoImg from '../src/assets/fruit-icons/peach.png';
 
-// Fruit image assets
+// Fruit images
 export const fruitImages = {
   greenapple: greenappleImg,
   pineapple: pineappleImg,
@@ -51,3 +51,4 @@ export const rarityGradients = {
   epic: 'from-purple-400 to-purple-600',
   legendary: 'from-yellow-400 to-yellow-600'
 };
+

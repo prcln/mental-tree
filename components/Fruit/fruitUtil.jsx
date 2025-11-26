@@ -1,9 +1,56 @@
-import { FRUIT_EMOJI_MAP } from "./constants";
+import { fruitImages, fruitEmojis } from '../../constants/fruits';
 import { supabase } from "../../supabase/client";
 import { fruitService } from "../../services/fruitService";
 
+// Image error tracking (stored in memory, not localStorage)
+let imageErrors = {};
+
+const handleFruitImageError = (fruitType) => {
+  imageErrors[fruitType] = true;
+};
+
+const resetImageErrors = () => {
+  imageErrors = {};
+};
+
+// Render fruit with image or emoji fallback (returns JSX)
+const renderFruit = (fruitType, size = 'md') => {
+  const useEmoji = imageErrors[fruitType] || !fruitImages[fruitType];
+  
+  const sizeClasses = {
+    sm: 'w-6 h-6 sm:w-8 sm:h-8',
+    md: 'w-10 h-10 sm:w-12 sm:h-12',
+    lg: 'w-14 h-14 sm:w-16 sm:h-16'
+  };
+
+  const textSizeClasses = {
+    sm: 'text-xl sm:text-2xl',
+    md: 'text-3xl sm:text-4xl',
+    lg: 'text-4xl sm:text-5xl'
+  };
+
+  if (useEmoji) {
+    return (
+      <span className={textSizeClasses[size]}>
+        {fruitEmojis[fruitType] || '🍎'}
+      </span>
+    );
+  }
+
+  return (
+    <img 
+      src={fruitImages[fruitType]}
+      alt={fruitType}
+      className={`${sizeClasses[size]} object-contain`}
+      onError={() => handleFruitImageError(fruitType)}
+    />
+  );
+};
+
+// Get emoji only (for non-JSX contexts)
 const getFruitEmoji = (fruitName) => {
-  return FRUIT_EMOJI_MAP[fruitName?.toLowerCase()] || FRUIT_EMOJI_MAP.default;
+  const normalizedName = fruitName?.toLowerCase();
+  return fruitEmojis[normalizedName] || '🍎';
 };
 
 const getTimeRemaining = (expiresAt) => {
@@ -87,4 +134,12 @@ const debugFruitSpawn = async (treeId) => {
   console.log('=== END DEBUG ===');
 };
 
-export { getTradeUsername, getTimeRemaining, getFruitEmoji, debugFruitSpawn }
+export { 
+  getTradeUsername, 
+  getTimeRemaining, 
+  getFruitEmoji, 
+  renderFruit,
+  handleFruitImageError,
+  resetImageErrors,
+  debugFruitSpawn 
+};
